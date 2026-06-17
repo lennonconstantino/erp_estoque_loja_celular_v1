@@ -1,0 +1,10 @@
+.git
+.gitignore
+bin/
+.env*
+Makefile
+*.md
+Dockerfile
+.dockerignore
+tmp/
+.DS_Store
