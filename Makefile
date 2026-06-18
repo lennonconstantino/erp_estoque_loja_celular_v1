@@ -6,9 +6,9 @@ export
 MIGRATE := migrate -path ./backend/migrations -database "$(DATABASE_URL)"
 COMPOSE := docker compose -f docker-compose.yml
 
-# Defaults de desenvolvimento que NUNCA devem ir para produção (ver check-secrets).
-INSECURE_JWT := troque-este-segredo-em-producao
-INSECURE_DB  := erp_secret
+# Sentinelas de desenvolvimento que NUNCA devem ir para produção (ver check-secrets).
+INSECURE_JWT := __INSECURE_DEV_JWT_SECRET__
+INSECURE_DB  := __INSECURE_DEV_DB_PASSWORD__
 
 .PHONY: help \
 	up down logs check-secrets \

@@ -7,7 +7,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${DB_USER:-erp}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD?Defina DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME:-erp_estoque}
     ports:
       - "5432:5432"
@@ -28,7 +28,7 @@ services:
       - ./backend/migrations:/migrations
     command:
       [ "-path", "/migrations",
-        "-database", "postgres://${DB_USER:-erp}:${DB_PASSWORD:-erp_secret}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable",
+        "-database", "postgres://${DB_USER:-erp}:${DB_PASSWORD?Defina DB_PASSWORD}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable",
         "up" ]
 
   api:
@@ -37,9 +37,9 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgres://${DB_USER:-erp}:${DB_PASSWORD:-erp_secret}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable
+      DATABASE_URL: postgres://${DB_USER:-erp}:${DB_PASSWORD?Defina DB_PASSWORD}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable
       APP_PORT: "8080"
-      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao}
+      JWT_SECRET: ${JWT_SECRET?Defina JWT_SECRET}
     ports:
       - "8080:8080"
 

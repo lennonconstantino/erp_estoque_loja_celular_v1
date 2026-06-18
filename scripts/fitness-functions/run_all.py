@@ -13,7 +13,7 @@ FF4: Chaos / Degradação — derruba o Postgres e valida que o processo sobrevi
 
 Variáveis de ambiente:
   BASE_URL     (default http://localhost:8080)
-  JWT_SECRET   (default "troque-este-segredo-em-producao" — igual ao config/compose)
+  JWT_SECRET   (obrigatória; se ausente, tenta ler de backend/.env)
   P99_LIMIT_MS (default 300)
   FF4_ENABLE   (=1 para rodar o teste de caos que para o container do banco)
 """
@@ -27,8 +27,29 @@ MODULE_BASE = "github.com/lennonconstantino/erp_estoque_loja_celular/backend"
 PROJECT     = ROOT.name                       # nome do projeto docker compose
 
 BASE_URL     = os.getenv("BASE_URL", "http://localhost:8080")
-JWT_SECRET   = os.getenv("JWT_SECRET", "troque-este-segredo-em-producao")
 P99_LIMIT_MS = int(os.getenv("P99_LIMIT_MS", "300"))
+
+def _maybe_load_backend_env() -> None:
+    env_path = BACKEND / ".env"
+    if not env_path.exists():
+        return
+    for raw in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ and value:
+            os.environ[key] = value
+
+if not os.getenv("JWT_SECRET"):
+    _maybe_load_backend_env()
+
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    print("JWT_SECRET ausente. Defina JWT_SECRET no ambiente (ou em backend/.env).")
+    sys.exit(2)
 
 
 # ══════════════════════════════════════════════════════════════════
