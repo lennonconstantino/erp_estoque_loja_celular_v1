@@ -37,16 +37,40 @@ bots varrem repos públicos em minutos.
 
 ### 3. Secrets em `docker-compose` e configs ✅
 
-- ✅ O [docker-compose.yml](../../docker-compose.yml) usa interpolação
-  `${DB_PASSWORD:-...}` / `${JWT_SECRET:-...}`; os valores após `:-` são **defaults de
-  dev**, e produção sobrescreve via env (ou `.env` fora do Git). Nenhum segredo real é
-  versionado no YAML.
-- **Em produção:** definir `DB_PASSWORD` e `JWT_SECRET` reais no ambiente/secret manager
-  do provedor (Railway). Rodando via `make up`, as variáveis de `backend/.env` já são
-  exportadas para a interpolação.
+- ✅ O [docker-compose.yml](../../docker-compose.yml) usa interpolação obrigatória
+  (`${DB_PASSWORD?...}` / `${JWT_SECRET?...}`), então o arquivo **falha cedo** se os
+  segredos não estiverem definidos no ambiente.
+- ✅ O caminho recomendado para desenvolvimento local é `make up`, que já roda o Compose
+  com `--env-file backend/.env`.
+- **Se rodar Compose direto:** usar
+  `docker compose --env-file backend/.env -f docker-compose.yml up -d --build`.
 - **Atenção:** se a senha tiver caracteres especiais (`@`, `!`, `:`, `/`), eles precisam
   ser **URL-encoded** dentro de `DATABASE_URL`.
 - **Errado:** `JWT_SECRET: super_secret_123` (texto puro fixo no YAML, versionado).
+
+### 4. GitGuardian e scanners de segredos ✅
+
+Ferramentas como **GitGuardian** analisam o conteúdo versionado e o diff do commit, não
+o contexto da equipe. Se um texto parece credencial, ele pode ser sinalizado mesmo que
+você saiba que é "só para dev".
+
+- **Não commitar valores literais** que pareçam segredo, mesmo em exemplos. Padrões que
+  costumam disparar alertas:
+  - DSN com senha embutida: `postgres://usuario:senha@host:5432/db`
+  - `JWT_SECRET=algum-valor`
+  - `DB_PASSWORD=minha-senha`
+- **Usar placeholders vazios ou genéricos** em arquivos versionados:
+  - `.env.example`: manter `DB_PASSWORD=` e `JWT_SECRET=` sem valor real
+  - docs: preferir `<defina-aqui>`, `${DB_PASSWORD}` ou `postgres://usuario:<senha>@host/db`
+- **Não usar defaults sensíveis em código/config**. Mesmo valores de desenvolvimento como
+  `erp_secret` ou `troque-este-segredo-em-producao` podem ser classificados como segredo
+  porque estão hardcoded.
+- **Evitar credenciais em URLs de exemplo** em Markdown, comentários e scripts. Scanners
+  também leem `docs/`, não apenas `.env` e código-fonte.
+- **Se um segredo real já foi commitado:** considerar o vazamento como ocorrido. Rotacionar
+  a credencial, revisar onde ela é usada e, se necessário, limpar o histórico do Git.
+- **Antes de abrir PR:** revisar `docker-compose.yml`, `.env.example`, scripts e docs para
+  garantir que só existam variáveis ou placeholders, nunca valores concretos.
 
 ### 4. Chamando APIs externas direto do browser ⚠️
 
@@ -189,7 +213,8 @@ Marque antes de cada deploy:
 - [ ] `.env` está no `.gitignore` ✅
 - [ ] Existe `.env.example` com a estrutura, sem valores reais ✅
 - [ ] `docker-compose.yml` **não** tem senhas hardcoded (usa `${VAR}` interpolado) ✅
-- [ ] `JWT_SECRET` de produção trocado (não o default `troque-este-...`) — verifique com `make check-secrets`
+- [ ] `.env.example`, scripts e docs usam placeholders, não valores que pareçam segredo
+- [ ] `JWT_SECRET` e `DB_PASSWORD` reais existem só em `backend/.env` local ou no secret manager do ambiente
 - [ ] Seed `admin@loja.local` / `admin123` desativado ou com senha trocada em produção
 - [ ] Toda rota de negócio verifica autenticação (`Authenticate`) ✅
 - [ ] Toda rota de negócio verifica autorização (`RequirePerm("recurso:acao")`) ✅
