@@ -8,6 +8,12 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 |-----------|----------|
 | [Client Brief](client-brief.md) | Contexto de negócio, problema, módulos e definição de pronto |
 
+## Processo
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [Mandates](mandates.md) | Definition of Done por tarefa (D1–D3), protocolo do agente juiz, templates e política de cobertura |
+
 ## Arquitetura
 
 | Documento | Conteúdo |
@@ -29,10 +35,18 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | [Segurança](reference/security.md) | Autenticação JWT e autorização RBAC |
 | [Checklist de Segurança](reference/checklist.md) | Gate de revisão pré-deploy adaptado à stack |
 
-## Guias
+## Setup
 
 | Documento | Conteúdo |
 |-----------|----------|
 | [Setup do Backend](setup/backend-setup.md) | Início rápido, Docker, variáveis de ambiente |
+| [Supabase](setup/supabase-setup.md) | Provisionamento do PostgreSQL gerenciado (host de banco) |
 | [Banco de Dados e Migrations](setup/database-migrations.md) | Inicialização, migrations e seed |
-| [Setup do Frontend](setup/frontend-setup.md) | Configuração do frontend |
+| [Setup do Frontend](setup/frontend-setup.md) | Convenções da SPA React, stack e variáveis |
+| [Deploy no Railway](setup/railway-deployment.md) | Deploy do backend e frontend em produção |
+
+## Runbooks
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [CircuitBreakerOpen](runbooks/circuit-breaker.md) | Diagnóstico e resposta quando um circuit breaker abre |

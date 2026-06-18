@@ -34,6 +34,25 @@ Pacote ou teste único: `go test` direto em `backend/` —
 
 Seed de login inicial: `admin@loja.local` / `admin123`.
 
+## Definition of Done por tarefa (obrigatório)
+
+Ao executar qualquer tarefa de um plano (fase do `PROMPT.md` ou item de
+`docs/todos.md`), siga o mandate canônico em **[docs/mandates.md](docs/mandates.md)**
+(resumo executável em §0.5 do [PROMPT.md](PROMPT.md)). Resumo:
+
+- **D1 — Testes no mesmo passo.** Entregue os testes unitários junto da lógica de
+  domínio/caso de uso (não adie para a Fase 8). Verifique com
+  `go test -cover ./internal/modules/<dominio>/...` — meta `domain/` ≥ 80%,
+  `application/` ≥ 70%. Frontend não tem testes: `pnpm tsc --noEmit` + `pnpm lint`.
+- **D2 — Checklist vivo.** Derive um checklist da tarefa antes de codar e marque
+  `[x]` os itens da fase em `docs/todos.md` ao concluí-los.
+- **D3 — Agente juiz.** Antes de declarar a fase como PASS, acione um subagent
+  **juiz independente** para julgar o diff contra a spec da fase e as Leis L1–L8.
+  Veredito `CONFORME` libera o avanço; `NÃO CONFORME` bloqueia até corrigir.
+
+Ordem: implementar → testes (D1) → checklist (D2) → critério `curl`/PASS da fase
+→ juiz CONFORME (D3).
+
 ## Architecture
 
 **Monólito modular com arquitetura hexagonal**, desenhado para extração futura em microsserviços. A documentação completa vive em [docs/](docs/README.md) — os pontos que exigem ler vários arquivos:
