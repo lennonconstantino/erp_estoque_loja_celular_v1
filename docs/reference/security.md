@@ -71,3 +71,6 @@ r.With(auth.Authenticate, auth.RequirePerm("vendas:write")).
 - Princípio do menor privilégio: rotas sempre exigem permissão específica.
 - Refresh com rotação + revogação; auditoria via `created_at`/`updated_at`.
 - (Recomendado p/ produção) rate limiting no `/auth/login` e HTTPS obrigatório.
+
+> Antes de cada deploy, rode o [Checklist de Segurança](checklist.md) — gate de
+> revisão (segredos, autorização, input/comunicação) adaptado a esta stack.

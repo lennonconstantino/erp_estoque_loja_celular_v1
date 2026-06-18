@@ -27,11 +27,12 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | [Modelo de Dados](reference/data-model.md) | Tabelas, colunas e relacionamentos |
 | [API REST](reference/api.md) | Endpoints por módulo |
 | [Segurança](reference/security.md) | Autenticação JWT e autorização RBAC |
+| [Checklist de Segurança](reference/checklist.md) | Gate de revisão pré-deploy adaptado à stack |
 
 ## Guias
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [Setup do Backend](guides/backend-setup.md) | Início rápido, Docker, variáveis de ambiente |
-| [Banco de Dados e Migrations](guides/database-migrations.md) | Inicialização, migrations e seed |
-| [Setup do Frontend](guides/frontend-setup.md) | Configuração do frontend |
+| [Setup do Backend](setup/backend-setup.md) | Início rápido, Docker, variáveis de ambiente |
+| [Banco de Dados e Migrations](setup/database-migrations.md) | Inicialização, migrations e seed |
+| [Setup do Frontend](setup/frontend-setup.md) | Configuração do frontend |

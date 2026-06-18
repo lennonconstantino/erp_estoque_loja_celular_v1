@@ -264,7 +264,7 @@ não pelo dashboard do Supabase. Fluxo:
 4. Versionar ambos os arquivos no commit.
 
 > A connection string das migrations deve ser a de **sessão direta** (porta 5432).
-> Detalhes em [guides/database-migrations.md](guides/database-migrations.md).
+> Detalhes em [setup/database-migrations.md](setup/database-migrations.md).
 
 ## Autenticação e autorização (JWT + RBAC)
 
@@ -340,7 +340,7 @@ Dois serviços num único projeto:
 O PostgreSQL fica no **Supabase** (não adicione um Railway Postgres). O backend é
 **stateless** — todo estado durável vive no Postgres. As variáveis `VITE_*` são
 compiladas no build do frontend; defina-as **antes** do `railway up`. Passo a
-passo em [guides/railway-deployment.md](guides/railway-deployment.md).
+passo em [setup/railway-deployment.md](setup/railway-deployment.md).
 
 ## Sequência de implementação
 

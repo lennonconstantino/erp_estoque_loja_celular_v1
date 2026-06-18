@@ -6,8 +6,12 @@ export
 MIGRATE := migrate -path ./backend/migrations -database "$(DATABASE_URL)"
 COMPOSE := docker compose -f docker-compose.yml
 
+# Defaults de desenvolvimento que NUNCA devem ir para produção (ver check-secrets).
+INSECURE_JWT := troque-este-segredo-em-producao
+INSECURE_DB  := erp_secret
+
 .PHONY: help \
-	up down logs \
+	up down logs check-secrets \
 	be-build be-run be-test be-vet be-fmt \
 	migrate-up migrate-down migrate-create seed reset \
 	fe-install fe-dev fe-build fe-lint \
@@ -19,6 +23,9 @@ help:          ## lista os alvos disponíveis
 
 ## ---- Infra (docker) ----------------------------------------------------
 up:            ## sobe banco + migrations + api + frontend
+	@if [ -z "$$JWT_SECRET" ] || [ "$$JWT_SECRET" = "$(INSECURE_JWT)" ]; then \
+		echo "  ⚠ JWT_SECRET usando o default de dev — OK p/ local, NÃO use em produção (rode 'make check-secrets')"; \
+	fi
 	$(COMPOSE) up -d --build
 
 down:          ## derruba os containers
@@ -26,6 +33,20 @@ down:          ## derruba os containers
 
 logs:          ## segue os logs da api (use s=frontend, s=db, ... para outro serviço)
 	$(COMPOSE) logs -f $(or $(s),api)
+
+check-secrets: ## falha se JWT_SECRET/DB_PASSWORD ainda forem os defaults de dev (pré-deploy)
+	@fail=0; \
+	if [ -z "$$JWT_SECRET" ] || [ "$$JWT_SECRET" = "$(INSECURE_JWT)" ]; then \
+		echo "  ✗ JWT_SECRET ausente ou no default de dev — defina um segredo real"; fail=1; \
+	else echo "  ✓ JWT_SECRET definido"; fi; \
+	if [ -z "$$DB_PASSWORD" ] || [ "$$DB_PASSWORD" = "$(INSECURE_DB)" ]; then \
+		echo "  ✗ DB_PASSWORD ausente ou no default de dev — defina uma senha real"; fail=1; \
+	else echo "  ✓ DB_PASSWORD definido"; fi; \
+	if [ "$$fail" = "1" ]; then \
+		echo "  Segredos inseguros — aceitável só em desenvolvimento. Exporte valores reais para produção."; \
+		exit 1; \
+	fi; \
+	echo "  Segredos OK para produção."
 
 ## ---- Backend (Go) ------------------------------------------------------
 be-build:      ## compila o binário em backend/bin/api

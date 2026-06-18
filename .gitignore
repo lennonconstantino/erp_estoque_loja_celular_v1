@@ -40,3 +40,17 @@ go.work.sum
 node_modules/
 dist/
 public/
+
+
+######
+# IDEs AI
+######
+.agent
+.agents
+.claude
+.codex
+.cursor
+.gemini
+.github
+.opencode
+.trae

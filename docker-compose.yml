@@ -1,16 +1,20 @@
+# Segredos vêm de variáveis de ambiente (${VAR}); os defaults após ":-" são
+# apenas para desenvolvimento local. Em produção, defina DB_PASSWORD e JWT_SECRET
+# reais no ambiente (ou num .env não versionado) — nunca commite valores reais.
+# Rodando via `make up`, as variáveis de backend/.env já são exportadas.
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: erp
-      POSTGRES_PASSWORD: erp_secret
-      POSTGRES_DB: erp_estoque
+      POSTGRES_USER: ${DB_USER:-erp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_secret}
+      POSTGRES_DB: ${DB_NAME:-erp_estoque}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U erp -d erp_estoque"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp} -d ${DB_NAME:-erp_estoque}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +28,7 @@ services:
       - ./backend/migrations:/migrations
     command:
       [ "-path", "/migrations",
-        "-database", "postgres://erp:erp_secret@db:5432/erp_estoque?sslmode=disable",
+        "-database", "postgres://${DB_USER:-erp}:${DB_PASSWORD:-erp_secret}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable",
         "up" ]
 
   api:
@@ -33,9 +37,9 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgres://erp:erp_secret@db:5432/erp_estoque?sslmode=disable
+      DATABASE_URL: postgres://${DB_USER:-erp}:${DB_PASSWORD:-erp_secret}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable
       APP_PORT: "8080"
-      JWT_SECRET: troque-este-segredo-em-producao
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao}
     ports:
       - "8080:8080"
 
