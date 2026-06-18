@@ -10,13 +10,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // NewRouter cria um *chi.Mux com os middlewares globais aplicados.
+//
+// O middleware otelhttp instrumenta toda requisição com métricas (latência,
+// volume, status) e spans, usando os providers globais configurados em
+// platform/observability. Quando a observabilidade não está inicializada (ex.:
+// em testes), os providers globais são no-op e o middleware fica inerte.
+// Endpoints de infraestrutura (/health, /metrics) são filtrados para não poluir
+// os dados com tráfego de health-check e scraping.
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(otelhttp.NewMiddleware("erp-api", otelhttp.WithFilter(func(req *http.Request) bool {
+		return req.URL.Path != "/health" && req.URL.Path != "/metrics"
+	})))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 

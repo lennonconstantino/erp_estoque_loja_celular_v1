@@ -25,6 +25,7 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | [Domínios (Bounded Contexts)](architecture/domains.md) | Responsabilidade e regras de cada domínio |
 | [Roadmap para Microsserviços](architecture/microservices-roadmap.md) | Fases de evolução e estratégia de extração |
 | [Resilience Stack](architecture/resilience.md) | Circuit Breaker, Bulkhead e Retry nos adaptadores de saída |
+| [Observabilidade](architecture/observability.md) | OpenTelemetry, métricas (Prometheus/Grafana) e stack-alvo de traces/logs |
 
 ## Referência
 

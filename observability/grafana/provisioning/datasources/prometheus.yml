@@ -1,0 +1,12 @@
+# Provisionamento automático do datasource Prometheus no Grafana (sem cliques).
+# Quando Tempo (traces) e Loki (logs) entrarem, adicione-os aqui como novos
+# datasources para habilitar a correlação trace <-> log <-> métrica.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true

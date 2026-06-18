@@ -17,6 +17,12 @@ type Config struct {
 	JWTSecret    string
 	JWTAccessTTL time.Duration
 	CepAPIURL    string
+
+	// Observabilidade (OpenTelemetry). OTLPEndpoint vazio mantém o tracing
+	// dormente; preencher OTEL_EXPORTER_OTLP_ENDPOINT liga a exportação de
+	// spans para um OTel Collector (fase de microsserviços).
+	ServiceName  string
+	OTLPEndpoint string
 }
 
 // Load lê o .env (se existir) e monta a Config a partir do ambiente,
@@ -31,6 +37,9 @@ func Load() *Config {
 		JWTSecret:    getenv("JWT_SECRET", "__INSECURE_DEV_JWT_SECRET__"),
 		JWTAccessTTL: getdur("JWT_ACCESS_TTL", 15*time.Minute),
 		CepAPIURL:    getenv("CEP_API_URL", "https://viacep.com.br/ws"),
+
+		ServiceName:  getenv("OTEL_SERVICE_NAME", "erp-api"),
+		OTLPEndpoint: getenv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
 	}
 }
 

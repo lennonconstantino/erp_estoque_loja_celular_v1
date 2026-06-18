@@ -47,6 +47,15 @@ Cada bounded context vira um serviço com seu banco:
                   API Gateway  ◄── front-end
 ```
 
+## Observabilidade ao longo das fases
+
+A instrumentação é **OpenTelemetry desde a Fase 1**, mas o backend de telemetria
+cresce com a topologia: hoje só **métricas** (Prometheus + Grafana); o gancho de
+**tracing** já está no código, dormente, e passa a exportar quando existir um
+**OTel Collector** — junto da primeira extração de serviço (Fase 3), que também
+traz **Tempo** (traces), **Loki** (logs) e **Alertmanager**. Detalhes, diagrama
+da stack-alvo e decisões em [observability.md](observability.md).
+
 ## Sagas (consistência distribuída)
 
 Quando os contextos estiverem separados, operações que cruzam fronteiras viram

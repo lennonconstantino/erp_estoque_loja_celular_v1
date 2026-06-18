@@ -19,6 +19,7 @@ import (
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/config"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/database"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/httpserver"
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/observability"
 )
 
 func main() {
@@ -31,12 +32,31 @@ func main() {
 	}
 	defer pool.Close()
 
+	// Observabilidade (OpenTelemetry): métricas sempre ligadas em /metrics;
+	// tracing dormente até OTEL_EXPORTER_OTLP_ENDPOINT existir.
+	obs, err := observability.Setup(ctx, observability.Config{
+		ServiceName:  cfg.ServiceName,
+		ServiceEnv:   cfg.AppEnv,
+		OTLPEndpoint: cfg.OTLPEndpoint,
+	})
+	if err != nil {
+		log.Fatalf("erro ao inicializar observabilidade: %v", err)
+	}
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := obs.Shutdown(shutdownCtx); err != nil {
+			log.Printf("erro no shutdown da observabilidade: %v", err)
+		}
+	}()
+
 	authMgr := auth.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL)
 
 	// Módulos (cada bounded context monta a si mesmo via DI).
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
 
 	r := httpserver.NewRouter()
+	r.Handle("/metrics", obs.MetricsHandler)
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Mount("/clientes", clientesMod.Router())
 		// api.Mount("/fornecedores", fornecedoresMod.Router())
@@ -51,7 +71,7 @@ func main() {
 
 	// Inicia o servidor e aguarda sinal de término para shutdown gracioso.
 	go func() {
-		log.Printf("API ouvindo em :%s (env=%s)", cfg.AppPort, cfg.AppEnv)
+		log.Printf("API ouvindo em :%s (env=%s, tracing=%t)", cfg.AppPort, cfg.AppEnv, obs.TracingAtivo)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("erro no servidor: %v", err)
 		}
