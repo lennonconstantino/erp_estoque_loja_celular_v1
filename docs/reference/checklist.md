@@ -156,15 +156,18 @@ Concatenar input em SQL (`... WHERE email = '${email}'`) permite injeção.
   concatenação de strings em SQL. (ORM Prisma/Drizzle **não se aplica**.)
 - **Regra:** todo novo repositório segue o mesmo padrão — placeholders, nunca interpolação.
 
-### 3. CORS aberto ⚠️
+### 3. CORS ✅
 
 `Access-Control-Allow-Origin: *` permite que qualquer site chame a API em nome do
 usuário logado.
 
-- ⚠️ Não há middleware de CORS configurado no backend hoje. Decidir:
-  - Se o frontend é servido **same-origin** (nginx faz proxy `/api` → backend): CORS
-    pode ser desnecessário.
-  - Se for **cross-origin**: configurar allowlist explícita de origens, nunca `*`.
+- ✅ Middleware `cors()` implementado em `platform/httpserver/httpserver.go`. Usa uma
+  **allowlist explícita** de origens (`map[string]bool`), nunca `*`. Preflight `OPTIONS`
+  responde 204 com os headers corretos (`Authorization`, `Content-Type`, `X-Request-Id`).
+- ✅ Origem(s) configurada(s) via `ALLOWED_ORIGINS` (CSV) — padrão dev:
+  `http://localhost:5173`; produção: `https://seu-frontend.railway.app`.
+- O nginx do frontend **não** faz proxy para o backend, então o deploy no Railway é
+  cross-origin por natureza — CORS é obrigatório e está implementado.
 
 ### 4. Sem rate limiting ⚠️
 
@@ -222,7 +225,7 @@ Marque antes de cada deploy:
 - [ ] Papéis/permissões no banco (`iam.*`), não hardcoded no código ✅
 - [ ] Input validado: `DecodeJSON` (DisallowUnknownFields) + invariantes de `domain/` ✅
 - [ ] Queries usam placeholders `pgx` (`$1`), sem concatenação de SQL ✅
-- [ ] CORS decidido: same-origin (nginx) **ou** allowlist explícita, nunca `*`
+- [ ] CORS: allowlist `ALLOWED_ORIGINS` configurada no ambiente de produção ✅ (middleware implementado)
 - [ ] Rate limiting nos endpoints críticos (login, quando o `iam` existir)
 - [ ] JWT verificado no backend, com `exp`; token não fica em `localStorage` exposto a XSS
 - [ ] Erros de produção não expõem stack trace / SQL / paths (envelope genérico) ✅

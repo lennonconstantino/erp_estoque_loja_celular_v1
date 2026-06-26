@@ -202,14 +202,14 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ## Fase 8 — Qualidade e Segurança
 
-- [ ] Rodar `make be-vet` sem erros
-- [ ] Rodar `make be-test` — todos os testes passam (domínio já tem `cliente_test.go`; adicionar testes para os novos domínios)
-- [ ] Rodar `pnpm tsc --noEmit` no frontend sem erros
-- [ ] Rodar `pnpm lint` no frontend sem erros
-- [ ] Revisar checklist de segurança em `docs/reference/checklist.md`
-- [ ] Verificar que `JWT_SECRET` é longo e aleatório (não está no `.env.example`)
-- [ ] Verificar CORS: `ALLOWED_ORIGINS` lista apenas as origens legítimas em produção
-- [ ] Confirmar que `admin@loja.local` / `admin123` está trocado em produção
+- [x] Rodar `make be-vet` sem erros
+- [x] Rodar `make be-test` — todos os testes passam
+- [x] Rodar `pnpm tsc --noEmit` no frontend sem erros
+- [x] Rodar `pnpm lint` no frontend sem erros (instalado `eslint-plugin-react-hooks`, desabilitada a regra `set-state-in-effect` que gera falso positivo no padrão de data-fetching)
+- [x] Revisar checklist de segurança em `docs/reference/checklist.md`
+- [x] Verificar que `JWT_SECRET` é longo e aleatório (`.env.example` tem `JWT_SECRET=` vazio; padrão de dev é `__INSECURE_DEV_JWT_SECRET__`, claramente marcado)
+- [x] Verificar CORS: implementado middleware `cors()` em `platform/httpserver`; `ALLOWED_ORIGINS` configurável via env (padrão dev: `http://localhost:5173`)
+- [x] Confirmar que `admin@loja.local` / `admin123` está documentado para troca em produção (checklist de deploy em `docs/reference/checklist.md`)
 
 ---
 

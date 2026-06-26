@@ -36,7 +36,7 @@ export default function CategoriasPage() {
     }
   }
 
-  useEffect(() => { carregar() }, [])
+  useEffect(() => { carregar() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function abrirNova() {
     setEditando(null)

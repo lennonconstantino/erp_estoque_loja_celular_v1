@@ -14,6 +14,7 @@ import (
 )
 
 // NewRouter cria um *chi.Mux com os middlewares globais aplicados.
+// allowedOrigins lista as origens aceitas no CORS (ex.: ["http://localhost:5173"]).
 //
 // O middleware otelhttp instrumenta toda requisição com métricas (latência,
 // volume, status) e spans, usando os providers globais configurados em
@@ -21,8 +22,9 @@ import (
 // em testes), os providers globais são no-op e o middleware fica inerte.
 // Endpoints de infraestrutura (/health, /metrics) são filtrados para não poluir
 // os dados com tráfego de health-check e scraping.
-func NewRouter() *chi.Mux {
+func NewRouter(allowedOrigins []string) *chi.Mux {
 	r := chi.NewRouter()
+	r.Use(cors(allowedOrigins))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(otelhttp.NewMiddleware("erp-api", otelhttp.WithFilter(func(req *http.Request) bool {
@@ -35,6 +37,33 @@ func NewRouter() *chi.Mux {
 		JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	return r
+}
+
+// cors retorna um middleware que adiciona os cabeçalhos CORS para origens
+// explicitamente permitidas. Preflight OPTIONS é respondido com 204.
+func cors(allowedOrigins []string) func(http.Handler) http.Handler {
+	allowed := make(map[string]bool, len(allowedOrigins))
+	for _, o := range allowedOrigins {
+		if o != "" {
+			allowed[o] = true
+		}
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" && allowed[origin] {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-Id")
+				w.Header().Set("Access-Control-Max-Age", "300")
+				if r.Method == http.MethodOptions {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // JSON escreve v como JSON com o status informado.

@@ -119,7 +119,7 @@ export default function ComprasPage() {
   useEffect(() => {
     void carregarCompras()
     void carregarDependencias()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── helpers de formulário ────────────────────────────────────────────────────
 

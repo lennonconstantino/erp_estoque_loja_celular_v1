@@ -86,6 +86,7 @@ export default function ProdutosPage() {
   useEffect(() => {
     carregarCategorias()
     carregar()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function abrirNovo() {

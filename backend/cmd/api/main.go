@@ -69,7 +69,7 @@ func main() {
 	vendasMod       := vendas.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), clientesMod.Writer())
 	relatoriosMod   := relatorios.New(pool, authMgr)
 
-	r := httpserver.NewRouter()
+	r := httpserver.NewRouter(cfg.AllowedOrigins)
 	r.Handle("/metrics", obs.MetricsHandler)
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Mount("/", iamMod.Router())
