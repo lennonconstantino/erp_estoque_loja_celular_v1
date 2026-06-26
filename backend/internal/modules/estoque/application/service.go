@@ -131,3 +131,33 @@ func (s *Service) RegistrarEntradaCompra(ctx context.Context, produtoID, compraI
 	}
 	return s.catalogo.AtualizarSaldo(ctx, produtoID, novoSaldo)
 }
+
+// RegistrarSaidaVenda lança uma movimentação do tipo VENDA no razão e decrementa
+// o saldo no catálogo de forma atômica (guarda contra corrida de confirmações).
+// Chamado pelo módulo vendas.
+func (s *Service) RegistrarSaidaVenda(ctx context.Context, produtoID, vendaID, responsavelID uuid.UUID, quantidade int) error {
+	// Lê saldo do ledger antes do decremento (para saldo_ant na movimentação).
+	saldoAntes, err := s.movs.ConsultarSaldoAtual(ctx, produtoID)
+	if err != nil {
+		return err
+	}
+	if saldoAntes < quantidade {
+		return domain.ErrSaldoInsuficiente
+	}
+
+	// Decremento atômico no catálogo: falha se outro thread já esgotou o estoque.
+	novoSaldo, err := s.catalogo.DecrementarSaldo(ctx, produtoID, quantidade)
+	if err != nil {
+		if err.Error() == domain.ErrSaldoInsuficiente.Error() {
+			return domain.ErrSaldoInsuficiente
+		}
+		return err
+	}
+
+	mov := domain.NovaMovimentacao(
+		produtoID, domain.TipoVenda, quantidade,
+		novoSaldo+quantidade, novoSaldo,
+		"VENDA", &vendaID, &responsavelID,
+	)
+	return s.movs.Create(ctx, mov)
+}

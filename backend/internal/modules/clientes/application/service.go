@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -110,6 +111,12 @@ func (s *Service) Listar(ctx context.Context, q string, limit, offset int) ([]do
 
 func (s *Service) ConsultarCEP(ctx context.Context, cep string) (domain.Endereco, error) {
 	return s.cep.Lookup(ctx, domain.NormalizarCPF(cep))
+}
+
+// AtualizarUltimaVenda atualiza dt_ult_comp_cli quando uma venda é confirmada.
+// Chamado pelo módulo vendas via porta ClienteWriter.
+func (s *Service) AtualizarUltimaVenda(ctx context.Context, id uuid.UUID, data time.Time) error {
+	return s.repo.AtualizarUltimaVenda(ctx, id, data)
 }
 
 // completarEndereco preenche rua/bairro/cidade/UF via CEP quando há CEP e a rua

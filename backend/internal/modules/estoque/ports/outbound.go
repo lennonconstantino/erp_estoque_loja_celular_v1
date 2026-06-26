@@ -28,4 +28,7 @@ type AjusteRepository interface {
 // Implementada pelo módulo catálogo e injetada via module.go.
 type CatalogoWriter interface {
 	AtualizarSaldo(ctx context.Context, produtoID uuid.UUID, novoSaldo int) error
+	// DecrementarSaldo atomicamente decrementa o saldo se houver estoque suficiente.
+	// Retorna o novo saldo; retorna erro "saldo insuficiente" se estoque_a_pro < quantidade.
+	DecrementarSaldo(ctx context.Context, produtoID uuid.UUID, quantidade int) (novoSaldo int, err error)
 }

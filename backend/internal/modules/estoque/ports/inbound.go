@@ -21,6 +21,7 @@ type LancarAjusteInput struct {
 // de entrada (compras) ou saída (vendas) sem passar pelos casos de uso de ajuste.
 type EstoqueWriter interface {
 	RegistrarEntradaCompra(ctx context.Context, produtoID, compraID, responsavelID uuid.UUID, quantidade int) error
+	RegistrarSaidaVenda(ctx context.Context, produtoID, vendaID, responsavelID uuid.UUID, quantidade int) error
 }
 
 // EstoqueService é a porta de entrada do módulo estoque.

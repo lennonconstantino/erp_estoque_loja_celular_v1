@@ -112,6 +112,23 @@ func (r *ProdutoRepository) UpdateSaldo(ctx context.Context, id uuid.UUID, novoS
 	return err
 }
 
+// DecrementarSaldo decrementa atomicamente o saldo se estoque_a_pro >= quantidade.
+// Garante que o saldo nunca fique negativo mesmo sob concorrência (lock pessimista via UPDATE condicional).
+func (r *ProdutoRepository) DecrementarSaldo(ctx context.Context, id uuid.UUID, quantidade int) (int, error) {
+	var novoSaldo int
+	err := r.pool.QueryRow(ctx, `
+		UPDATE catalogo.produtos
+		SET estoque_a_pro = estoque_a_pro - $2,
+		    disp_pro = (estoque_a_pro - $2) > 0
+		WHERE id_pro = $1 AND estoque_a_pro >= $2
+		RETURNING estoque_a_pro`,
+		id, quantidade).Scan(&novoSaldo)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, domain.ErrSaldoInsuficiente
+	}
+	return novoSaldo, err
+}
+
 func scanProduto(s scanner) (*domain.Produto, error) {
 	var p domain.Produto
 	err := s.Scan(

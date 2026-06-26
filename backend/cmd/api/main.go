@@ -20,6 +20,7 @@ import (
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/estoque"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/fornecedores"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/iam"
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/vendas"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/auth"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/config"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/database"
@@ -64,6 +65,7 @@ func main() {
 	catalogoMod     := catalogo.New(pool, authMgr)
 	estoqueMod      := estoque.New(pool, authMgr, catalogoMod.Writer())
 	comprasMod      := compras.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), fornecedoresMod.Writer())
+	vendasMod       := vendas.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), clientesMod.Writer())
 
 	r := httpserver.NewRouter()
 	r.Handle("/metrics", obs.MetricsHandler)
@@ -75,7 +77,7 @@ func main() {
 		api.Mount("/produtos", catalogoMod.ProdutosRouter())
 		api.Mount("/estoque", estoqueMod.Router())
 		api.Mount("/compras", comprasMod.Router())
-		// ... demais módulos
+		api.Mount("/vendas", vendasMod.Router())
 	})
 
 	srv := &http.Server{

@@ -26,4 +26,6 @@ type ProdutoRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.Produto, error)
 	List(ctx context.Context, q string, categoriaID *uuid.UUID, limit, offset int) ([]domain.Produto, error)
 	UpdateSaldo(ctx context.Context, id uuid.UUID, novoSaldo int, disponivel bool) error
+	// DecrementarSaldo atomicamente decrementa o saldo se estoque_a_pro >= quantidade.
+	DecrementarSaldo(ctx context.Context, id uuid.UUID, quantidade int) (novoSaldo int, err error)
 }

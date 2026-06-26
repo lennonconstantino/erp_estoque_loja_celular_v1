@@ -26,8 +26,8 @@ func NewService(cats ports.CategoriaRepository, prods ports.ProdutoRepository) *
 // Conformidade em tempo de compilação.
 var _ ports.CategoriaService = (*Service)(nil)
 var _ ports.ProdutoService   = (*Service)(nil)
-var _ ports.CatalogoReader   = (*Service)(nil) // inclui ExisteProduto
-var _ ports.CatalogoWriter   = (*Service)(nil)
+var _ ports.CatalogoReader   = (*Service)(nil) // inclui ExisteProduto e ConsultarSaldoProduto
+var _ ports.CatalogoWriter   = (*Service)(nil) // inclui DecrementarSaldo
 
 // ─── CategoriaService ────────────────────────────────────────────────────────
 
@@ -151,6 +151,16 @@ func (s *Service) ExisteProduto(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+// ConsultarSaldoProduto retorna o saldo materializado atual do produto.
+// Consumida por vendas para validação pré-confirmação.
+func (s *Service) ConsultarSaldoProduto(ctx context.Context, id uuid.UUID) (int, error) {
+	p, err := s.prods.FindByID(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	return p.EstoqueAtual, nil
+}
+
 // ─── CatalogoWriter ──────────────────────────────────────────────────────────
 
 func (s *Service) AtualizarSaldo(ctx context.Context, produtoID uuid.UUID, novoSaldo int) error {
@@ -162,4 +172,10 @@ func (s *Service) AtualizarSaldo(ctx context.Context, produtoID uuid.UUID, novoS
 		return err
 	}
 	return s.prods.UpdateSaldo(ctx, produtoID, p.EstoqueAtual, p.Disponivel)
+}
+
+// DecrementarSaldo atomicamente decrementa o saldo materializado se houver estoque.
+// Usado por vendas para garantir que saldo negativo é impossível sob concorrência.
+func (s *Service) DecrementarSaldo(ctx context.Context, produtoID uuid.UUID, quantidade int) (int, error) {
+	return s.prods.DecrementarSaldo(ctx, produtoID, quantidade)
 }

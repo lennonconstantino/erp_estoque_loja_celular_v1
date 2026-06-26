@@ -60,10 +60,14 @@ type CatalogoReader interface {
 	BuscarProduto(ctx context.Context, id uuid.UUID) (*domain.Produto, error)
 	// ExisteProduto retorna nil se o produto existir ou erro de domínio caso contrário.
 	ExisteProduto(ctx context.Context, id uuid.UUID) error
+	// ConsultarSaldoProduto retorna o saldo materializado atual de um produto.
+	ConsultarSaldoProduto(ctx context.Context, id uuid.UUID) (int, error)
 }
 
 // CatalogoWriter é a interface exposta para que estoque atualize saldo e
 // disponibilidade de um produto (consumida como porta outbound por estoque).
 type CatalogoWriter interface {
 	AtualizarSaldo(ctx context.Context, produtoID uuid.UUID, novoSaldo int) error
+	// DecrementarSaldo atomicamente decrementa o saldo se houver estoque suficiente.
+	DecrementarSaldo(ctx context.Context, produtoID uuid.UUID, quantidade int) (novoSaldo int, err error)
 }

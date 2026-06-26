@@ -5,6 +5,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -104,6 +105,19 @@ func (r *ClienteRepository) List(ctx context.Context, q string, limit, offset in
 		out = append(out, *c)
 	}
 	return out, rows.Err()
+}
+
+// AtualizarUltimaVenda atualiza o campo dt_ult_comp_cli quando uma venda é confirmada.
+func (r *ClienteRepository) AtualizarUltimaVenda(ctx context.Context, id uuid.UUID, data time.Time) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE clientes.clientes SET dt_ult_comp_cli=$2 WHERE id_cli=$1`, id, data)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNaoEncontrado
+	}
+	return nil
 }
 
 // scanner abstrai pgx.Row e pgx.Rows (ambos têm Scan).

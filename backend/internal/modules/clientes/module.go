@@ -20,6 +20,7 @@ import (
 
 // Module expõe o roteador do contexto para montagem no servidor.
 type Module struct {
+	svc    *application.Service
 	router chi.Router
 }
 
@@ -38,8 +39,11 @@ func New(pool *pgxpool.Pool, authMgr *auth.Manager, cepURL string) *Module {
 	svc := application.NewService(repo, cepGateway)
 	handler := httpadapter.NewHandler(svc)
 
-	return &Module{router: httpadapter.NewRouter(handler, authMgr)}
+	return &Module{svc: svc, router: httpadapter.NewRouter(handler, authMgr)}
 }
 
 // Router retorna o roteador do módulo para ser montado sob /api/v1/clientes.
 func (m *Module) Router() chi.Router { return m.router }
+
+// Writer retorna o serviço de clientes para uso cross-module por vendas (ClienteWriter).
+func (m *Module) Writer() *application.Service { return m.svc }

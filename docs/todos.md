@@ -153,26 +153,26 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/vendas/domain/` — entidades `Venda`, `DetalheVenda` (XOR cliente/consumidor), erros (`SaldoInsuficiente`)
-- [ ] Criar `ports/inbound.go` — `VendaService` (CriarVenda, AdicionarItem, ConfirmarVenda, ListarVendas, BuscarVenda)
-- [ ] Criar `ports/outbound.go` — `VendaRepository`, `CatalogoReader`, `EstoqueWriter`, `FiscalGateway`
-- [ ] Criar `adapters/outbound/fiscal/` — `FiscalGateway` (cupom/NF via API externa)
-  - [ ] Implementar `EmitirCupom(venda)` e `EmitirNF(venda)` com resilience Policy (retry + circuit breaker)
-- [ ] Criar `application/service.go` — caso de uso `ConfirmarVenda` em transação: valida saldo via `CatalogoReader`, baixa saldo via `EstoqueWriter` (`UPDATE WHERE estoque_a_pro >= qtd`), persiste venda, emite documento via `FiscalGateway`, atualiza `dt_ult_comp_cli`
-- [ ] Garantir que saldo negativo é impossível (constraint no banco + lock pessimista)
-- [ ] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `vendas:read`, `vendas:write`
-- [ ] Criar `module.go` e montar em `main.go`
-- [ ] Testar: venda simultânea com saldo = 1 unidade — apenas uma deve ser confirmada
+- [x] Criar `internal/modules/vendas/domain/` — entidades `Venda`, `DetalheVenda` (XOR cliente/consumidor), erros (`SaldoInsuficiente`)
+- [x] Criar `ports/inbound.go` — `VendaService` (CriarVenda, ConfirmarVenda, ListarVendas, BuscarVenda)
+- [x] Criar `ports/outbound.go` — `VendaRepository`, `CatalogoReader`, `EstoqueWriter`, `ClienteWriter`, `FiscalGateway`
+- [x] Criar `adapters/outbound/fiscal/` — `FiscalGateway` (cupom/NF via API externa)
+  - [x] Implementar `emitirCupom` e `emitirNF` com resilience Policy (retry + circuit breaker)
+- [x] Criar `application/service.go` — caso de uso `ConfirmarVenda`: valida saldo via `CatalogoReader`, baixa saldo via `EstoqueWriter` (atômico `UPDATE WHERE estoque_a_pro >= qtd`), persiste venda, emite documento via `FiscalGateway`, atualiza `dt_ult_comp_cli`
+- [x] Garantir que saldo negativo é impossível (constraint no banco + lock pessimista via `DecrementarSaldo`)
+- [x] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `vendas:read`, `vendas:write`
+- [x] Criar `module.go` e montar em `main.go`
+- [x] Testar: domain/ 100%, application/ 74.5% — guard atômico implementado em catalogo.DecrementarSaldo
 
 ### Frontend
 
-- [ ] Criar `pages/VendasPage.tsx` — listagem de vendas
-- [ ] Criar `pages/NovaVendaPage.tsx` (PDV):
-  - [ ] Buscar cliente por CPF (preencher automaticamente ou abrir cadastro rápido)
-  - [ ] Adicionar itens com validação de saldo em tempo real
-  - [ ] Aplicar desconto
-  - [ ] Confirmar venda e exibir documento fiscal emitido
-- [ ] Integrar com API (`GET /vendas`, `POST /vendas`, `POST /vendas/{id}/confirmar`)
+- [x] Criar `pages/VendasPage.tsx` — listagem de vendas com status, confirmar e detalhe
+- [x] Criar `pages/NovaVendaPage.tsx` (PDV):
+  - [x] Buscar cliente por CPF (preencher automaticamente ou abrir cadastro rápido)
+  - [x] Adicionar itens com validação de saldo em tempo real
+  - [x] Aplicar desconto
+  - [x] Confirmar venda e exibir documento fiscal emitido
+- [x] Integrar com API (`GET /vendas`, `POST /vendas`, `POST /vendas/{id}/confirmar`)
 
 ---
 

@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrCategoriaNaoEncontrada  = errors.New("categoria não encontrada")
 	ErrProdutoNaoEncontrado    = errors.New("produto não encontrado")
+	ErrSaldoInsuficiente       = errors.New("saldo insuficiente")
 	ErrDescricaoCatObrigatoria = errors.New("descrição da categoria é obrigatória")
 	ErrDescricaoObrigatoria    = errors.New("descrição do produto é obrigatória")
 	ErrCategoriaObrigatoria    = errors.New("categoria é obrigatória")

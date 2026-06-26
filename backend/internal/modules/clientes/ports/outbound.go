@@ -4,6 +4,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -18,6 +19,7 @@ type ClienteRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.Cliente, error)
 	FindByCPF(ctx context.Context, cpf string) (*domain.Cliente, error)
 	List(ctx context.Context, q string, limit, offset int) ([]domain.Cliente, error)
+	AtualizarUltimaVenda(ctx context.Context, id uuid.UUID, data time.Time) error
 }
 
 // CepGateway é a porta de saída para consulta de CEP (dependência externa).
