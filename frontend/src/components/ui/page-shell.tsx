@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Sidebar } from './sidebar'
+import { ThemeToggle } from './theme-toggle'
+import { CommandPalette } from './command-palette'
 
 interface PageShellProps {
   title: string
@@ -9,44 +12,75 @@ interface PageShellProps {
   /** Ações exibidas à direita do cabeçalho (ex.: botão "Novo"). */
   actions?: ReactNode
   /** Largura máxima do conteúdo. */
-  maxWidth?: 'max-w-4xl' | 'max-w-5xl' | 'max-w-6xl'
+  maxWidth?: 'max-w-4xl' | 'max-w-5xl' | 'max-w-6xl' | 'max-w-7xl' | 'max-w-none'
   /** Destino do botão voltar. */
   back?: string
   children: ReactNode
 }
 
 /**
- * Casca padrão das páginas internas: barra de cabeçalho branca com botão
- * voltar + título/subtítulo, e contêiner principal centralizado.
+ * PageShell refinado: integra Sidebar fixa, Header técnico com CommandPalette e ThemeToggle.
  */
 export function PageShell({
   title,
   subtitle,
   actions,
-  maxWidth = 'max-w-5xl',
-  back = '/',
+  maxWidth = 'max-w-6xl',
+  back,
   children,
 }: PageShellProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => navigate(back)}
-          className="text-gray-400 hover:text-gray-700"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-base font-semibold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
-        </div>
-        {actions && <div className="flex items-center gap-3">{actions}</div>}
-      </header>
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20">
+      <Sidebar />
 
-      <main className={cn('mx-auto px-6 py-8 space-y-4', maxWidth)}>{children}</main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            {back ? (
+              <button
+                onClick={() => navigate(back)}
+                className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-all rounded-full hover:bg-accent active:scale-95"
+                aria-label="Voltar"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
+                <Home className="w-3 h-3" />
+                <ChevronRight className="w-3 h-3 opacity-20" />
+                <span>ERP</span>
+                <ChevronRight className="w-3 h-3 opacity-20" />
+                <span className="text-foreground">{title}</span>
+              </div>
+            )}
+            
+            <div className="hidden lg:flex flex-1 max-w-sm ml-4">
+              <CommandPalette />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {actions && <div className="flex items-center gap-2 mr-2">{actions}</div>}
+            <div className="w-px h-4 bg-border mx-1" />
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 lg:p-10 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          <div className={cn('mx-auto space-y-8', maxWidth)}>
+            <div className="space-y-1 animate-in fade-in slide-in-from-top-4 duration-700">
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>
+              {subtitle && <p className="text-base text-muted-foreground max-w-2xl leading-relaxed">{subtitle}</p>}
+            </div>
+            
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+              {children}
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Pencil, Plus, X } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { api, ApiError } from '@/lib/api'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { StatusBadge } from '@/components/ui/badge'
+import { PageShell } from '@/components/ui/page-shell'
+import { Button } from '@/components/ui/button'
+import { Field, inputClasses } from '@/components/ui/field'
+import { Modal } from '@/components/ui/modal'
 
 // ── tipos ──────────────────────────────────────────────────────────────────────
 
@@ -40,8 +43,6 @@ const vazio = {
 // ── componente principal ───────────────────────────────────────────────────────
 
 export default function ClientesPage() {
-  const navigate = useNavigate()
-
   const [itens, setItens] = useState<Cliente[]>([])
   const [pagina, setPagina] = useState(0)
   const [busca, setBusca] = useState('')
@@ -123,7 +124,7 @@ export default function ClientesPage() {
         uf: end.UF || prev.uf,
       }))
     } catch {
-      // CEP não encontrado — usuário preenche manualmente
+      // CEP não encontrado
     } finally {
       setBuscandoCep(false)
     }
@@ -174,15 +175,15 @@ export default function ClientesPage() {
       header: 'Nome',
       sortAccessor: (c) => c.nome,
       cell: (c) => (
-        <div>
-          <p className="font-medium text-gray-900">{c.nome}</p>
-          {c.cidade && <p className="text-xs text-gray-500">{c.cidade}{c.uf ? ` / ${c.uf}` : ''}</p>}
+        <div className="flex flex-col">
+          <p className="font-bold text-foreground leading-tight">{c.nome}</p>
+          {c.cidade && <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">{c.cidade}{c.uf ? ` / ${c.uf}` : ''}</p>}
         </div>
       ),
     },
-    { header: 'CPF', hideBelow: 'sm', sortAccessor: (c) => c.cpf, cell: (c) => <span className="text-gray-600">{formatarCPF(c.cpf)}</span> },
-    { header: 'E-mail', hideBelow: 'md', sortAccessor: (c) => c.email, cell: (c) => <span className="text-gray-600">{c.email}</span> },
-    { header: 'Telefone', hideBelow: 'md', sortAccessor: (c) => c.telefone ?? '', cell: (c) => <span className="text-gray-600">{c.telefone ?? '—'}</span> },
+    { header: 'CPF', hideBelow: 'sm', sortAccessor: (c) => c.cpf, cell: (c) => <span className="text-muted-foreground font-mono">{formatarCPF(c.cpf)}</span>, isTechnical: true },
+    { header: 'E-mail', hideBelow: 'md', sortAccessor: (c) => c.email, cell: (c) => <span className="text-muted-foreground">{c.email}</span> },
+    { header: 'Telefone', hideBelow: 'md', sortAccessor: (c) => c.telefone ?? '', cell: (c) => <span className="text-muted-foreground">{c.telefone ?? '—'}</span> },
     {
       header: 'Status',
       sortAccessor: (c) => (c.ativo ? 1 : 0),
@@ -192,140 +193,121 @@ export default function ClientesPage() {
       header: '',
       align: 'right',
       cell: (c) => (
-        <button onClick={() => abrirEditar(c)} className="text-gray-400 hover:text-gray-700" title="Editar">
+        <button onClick={() => abrirEditar(c)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted" title="Editar">
           <Pencil className="w-4 h-4" />
         </button>
       ),
     },
   ]
 
-  // ── render ──────────────────────────────────────────────────────────────────
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <button onClick={() => navigate('/')} className="text-gray-400 hover:text-gray-700">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-base font-semibold text-gray-900">Clientes</h1>
-          <p className="text-xs text-gray-500">Cadastro e gestão de clientes</p>
-        </div>
-      </header>
+    <PageShell 
+      title="Clientes" 
+      subtitle="Cadastro e gestão de clientes" 
+      maxWidth="max-w-6xl"
+      actions={
+        <Button onClick={abrirCriar}>
+          <Plus className="w-4 h-4" />
+          Novo Cliente
+        </Button>
+      }
+    >
+      <div className="flex items-center gap-3 bg-card p-4 rounded-2xl border border-border shadow-sm animate-in fade-in duration-500">
+        <form onSubmit={handleBusca} className="flex flex-1 gap-2">
+          <input
+            type="text"
+            placeholder="Buscar por nome, CPF ou e-mail…"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className={inputClasses() + ' flex-1'}
+          />
+          <Button type="submit" variant="secondary" className="px-8 h-10">Pesquisar</Button>
+        </form>
+      </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-4">
-        <div className="flex items-center gap-3">
-          <form onSubmit={handleBusca} className="flex flex-1 gap-2">
-            <input
-              type="text"
-              placeholder="Buscar por nome, CPF ou e-mail…"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800"
-            >
-              Buscar
-            </button>
-          </form>
-          <button
-            onClick={abrirCriar}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800"
+      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+
+      <DataTable
+        columns={colunas}
+        rows={itens}
+        rowKey={(c) => c.id}
+        loading={carregando}
+        empty="Nenhum cliente encontrado."
+      />
+
+      {(itens.length === limite || pagina > 0) && (
+        <div className="flex justify-between items-center bg-card p-3 rounded-xl border border-border shadow-sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pagina === 0}
+            onClick={() => { const p = pagina - 1; setPagina(p); void carregar(busca, p) }}
           >
-            <Plus className="w-4 h-4" />
-            Novo
-          </button>
+            Anterior
+          </Button>
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Página {pagina + 1}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={itens.length < limite}
+            onClick={() => { const p = pagina + 1; setPagina(p); void carregar(busca, p) }}
+          >
+            Próxima
+          </Button>
         </div>
-
-        {erro && <p className="text-sm text-red-600">{erro}</p>}
-
-        <DataTable
-          columns={colunas}
-          rows={itens}
-          rowKey={(c) => c.id}
-          loading={carregando}
-          empty="Nenhum cliente encontrado."
-        />
-
-        {!carregando && itens.length === limite && (
-          <div className="flex justify-end gap-2">
-            {pagina > 0 && (
-              <button
-                onClick={() => { const p = pagina - 1; setPagina(p); void carregar(busca, p) }}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Anterior
-              </button>
-            )}
-            <button
-              onClick={() => { const p = pagina + 1; setPagina(p); void carregar(busca, p) }}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Próxima
-            </button>
-          </div>
-        )}
-      </main>
+      )}
 
       {modalAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h2 className="text-base font-semibold text-gray-900">
-                {editando ? 'Editar Cliente' : 'Novo Cliente'}
-              </h2>
-              <button onClick={fecharModal} className="text-gray-400 hover:text-gray-700">
-                <X className="w-5 h-5" />
-              </button>
+        <Modal title={editando ? 'Editar Cliente' : 'Novo Cliente'} onClose={fecharModal} maxWidth="max-w-2xl">
+          <form onSubmit={(e) => { void handleSalvar(e) }} className="px-6 py-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Field label="CPF *" disabled={!!editando}>
+                <input
+                  required
+                  disabled={!!editando}
+                  placeholder="000.000.000-00"
+                  value={form.cpf}
+                  onChange={(e) => campo('cpf', e.target.value)}
+                  className={inputClasses(!!editando)}
+                />
+              </Field>
+              <Field label="E-mail *">
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => campo('email', e.target.value)}
+                  className={inputClasses()}
+                  placeholder="cliente@exemplo.com"
+                />
+              </Field>
             </div>
 
-            <form onSubmit={(e) => { void handleSalvar(e) }} className="px-6 py-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Campo label="CPF *" disabled={!!editando}>
-                  <input
-                    required
-                    disabled={!!editando}
-                    placeholder="000.000.000-00"
-                    value={form.cpf}
-                    onChange={(e) => campo('cpf', e.target.value)}
-                    className={inputCls(!!editando)}
-                  />
-                </Campo>
-                <Campo label="E-mail *">
-                  <input
-                    required
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => campo('email', e.target.value)}
-                    className={inputCls()}
-                  />
-                </Campo>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Field label="Nome Completo *">
+                <input
+                  required
+                  value={form.nome}
+                  onChange={(e) => campo('nome', e.target.value)}
+                  className={inputClasses()}
+                  placeholder="Nome do cliente"
+                />
+              </Field>
+              <Field label="Telefone">
+                <input
+                  value={form.telefone}
+                  onChange={(e) => campo('telefone', e.target.value)}
+                  className={inputClasses()}
+                  placeholder="(00) 00000-0000"
+                />
+              </Field>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Campo label="Nome *">
-                  <input
-                    required
-                    value={form.nome}
-                    onChange={(e) => campo('nome', e.target.value)}
-                    className={inputCls()}
-                  />
-                </Campo>
-                <Campo label="Telefone">
-                  <input
-                    value={form.telefone}
-                    onChange={(e) => campo('telefone', e.target.value)}
-                    className={inputCls()}
-                  />
-                </Campo>
-              </div>
-
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest pt-2">Endereço</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="pt-2">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 border-b border-border pb-2">Endereço de Entrega</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="col-span-2">
-                  <Campo label={`CEP${buscandoCep ? ' (buscando…)' : ''}`}>
+                  <Field label={`CEP${buscandoCep ? ' (Buscando…)' : ''}`}>
                     <input
                       value={form.cep}
                       placeholder="00000-000"
@@ -333,91 +315,62 @@ export default function ClientesPage() {
                         campo('cep', e.target.value)
                         void buscarCep(e.target.value)
                       }}
-                      className={inputCls()}
+                      className={inputClasses()}
                     />
-                  </Campo>
+                  </Field>
                 </div>
-                <Campo label="Número">
-                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} className={inputCls()} />
-                </Campo>
-                <Campo label="Complemento">
-                  <input value={form.complemento} onChange={(e) => campo('complemento', e.target.value)} className={inputCls()} />
-                </Campo>
+                <Field label="Número">
+                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} className={inputClasses()} placeholder="123" />
+                </Field>
+                <Field label="Complemento">
+                  <input value={form.complemento} onChange={(e) => campo('complemento', e.target.value)} className={inputClasses()} placeholder="Apt 42" />
+                </Field>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
                 <div className="sm:col-span-2">
-                  <Campo label="Rua">
-                    <input value={form.rua} onChange={(e) => campo('rua', e.target.value)} className={inputCls()} />
-                  </Campo>
+                  <Field label="Rua / Logradouro">
+                    <input value={form.rua} onChange={(e) => campo('rua', e.target.value)} className={inputClasses()} placeholder="Nome da rua" />
+                  </Field>
                 </div>
-                <Campo label="Bairro">
-                  <input value={form.bairro} onChange={(e) => campo('bairro', e.target.value)} className={inputCls()} />
-                </Campo>
+                <Field label="Bairro">
+                  <input value={form.bairro} onChange={(e) => campo('bairro', e.target.value)} className={inputClasses()} placeholder="Nome do bairro" />
+                </Field>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mt-6">
                 <div className="sm:col-span-3">
-                  <Campo label="Cidade">
-                    <input value={form.cidade} onChange={(e) => campo('cidade', e.target.value)} className={inputCls()} />
-                  </Campo>
+                  <Field label="Cidade">
+                    <input value={form.cidade} onChange={(e) => campo('cidade', e.target.value)} className={inputClasses()} placeholder="Ex: São Paulo" />
+                  </Field>
                 </div>
-                <Campo label="UF">
-                  <input maxLength={2} value={form.uf} onChange={(e) => campo('uf', e.target.value.toUpperCase())} className={inputCls()} />
-                </Campo>
+                <Field label="UF">
+                  <input maxLength={2} value={form.uf} onChange={(e) => campo('uf', e.target.value.toUpperCase())} className={inputClasses()} placeholder="SP" />
+                </Field>
               </div>
+            </div>
 
-              {editando && (
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.ativo}
-                    onChange={(e) => campo('ativo', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  Ativo
-                </label>
-              )}
+            {editando && (
+              <label className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest cursor-pointer hover:text-foreground transition-colors">
+                <input
+                  type="checkbox"
+                  checked={form.ativo}
+                  onChange={(e) => campo('ativo', e.target.checked)}
+                  className="w-4 h-4 rounded border-border bg-muted/20 text-primary focus:ring-primary"
+                />
+                Cliente ativo no sistema
+              </label>
+            )}
 
-              {erroForm && <p className="text-sm text-red-600">{erroForm}</p>}
+            {erroForm && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={fecharModal}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {salvando ? 'Salvando…' : editando ? 'Salvar' : 'Criar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              <Button type="button" variant="secondary" onClick={fecharModal}>Cancelar</Button>
+              <Button type="submit" disabled={salvando} className="min-w-32">
+                {salvando ? 'Salvando…' : editando ? 'Salvar Alterações' : 'Cadastrar Cliente'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       )}
-    </div>
+    </PageShell>
   )
-}
-
-// ── helpers ────────────────────────────────────────────────────────────────────
-
-function Campo({ label, children, disabled }: { label: string; children: React.ReactNode; disabled?: boolean }) {
-  return (
-    <div>
-      <label className={`block text-sm font-medium mb-1 ${disabled ? 'text-gray-400' : 'text-gray-700'}`}>
-        {label}
-      </label>
-      {children}
-    </div>
-  )
-}
-
-function inputCls(disabled = false) {
-  return `w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
-    disabled ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'border-gray-300'
-  }`
 }

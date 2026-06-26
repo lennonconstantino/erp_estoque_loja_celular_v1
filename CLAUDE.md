@@ -88,3 +88,5 @@ Notas de modelagem relevantes: `estoque.movimentacoes` é um ledger **append-onl
 ### Frontend (`frontend/`)
 
 React 18 + Vite + TypeScript + Tailwind + shadcn/ui (`components.json`), gerenciado com **pnpm**. Alias `@` → `src/`. Camada de rede própria: `lib/http.ts` (fetch tipado) → `lib/api.ts` (timeout + refresh de token automático, `ApiError`) → `lib/auth.ts` (tokens). Em produção é servido por nginx (ver `frontend/nginx.conf` e `Dockerfile`).
+
+Todas as telas compõem o **kit de UI** em `@/components/ui` (casca `PageShell` com `Sidebar` fixa + paleta de comandos ⌘K, `DataTable`, `Tabs`, `Modal`, `Field`, `StatusBadge`, `Button`) e estilizam **só com tokens semânticos** do tema — há **Dark/Light mode** via `@/lib/theme` (classe `.dark` no `<html>`, tokens em `src/index.css`), então nada de cores cruas. Detalhes em [docs/setup/frontend-setup.md](docs/setup/frontend-setup.md) e [frontend/CLAUDE.md](frontend/CLAUDE.md).

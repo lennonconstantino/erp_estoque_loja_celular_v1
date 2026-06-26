@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { getRefreshToken, isAuthenticated } from '@/lib/auth'
+import { ThemeProvider } from '@/lib/theme'
+import { Toaster } from '@/components/ui/sonner'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import FornecedoresPage from '@/pages/FornecedoresPage'
@@ -19,9 +21,10 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
         <Route
           path="/clientes"
           element={
@@ -102,7 +105,9 @@ export default function App() {
             </PrivateRoute>
           }
         />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+      <Toaster position="top-right" richColors />
+    </ThemeProvider>
   )
 }

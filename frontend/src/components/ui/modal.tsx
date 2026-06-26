@@ -6,21 +6,27 @@ interface ModalProps {
   title: string
   onClose: () => void
   children: ReactNode
-  maxWidth?: 'max-w-md' | 'max-w-lg' | 'max-w-xl' | 'max-w-2xl' | 'max-w-3xl'
+  maxWidth?: 'max-w-md' | 'max-w-lg' | 'max-w-xl' | 'max-w-2xl' | 'max-w-3xl' | 'max-w-4xl'
 }
 
-/** Janela modal padrão (overlay + cartão com cabeçalho e botão fechar). */
+/** Janela modal técnica (overlay escuro + cartão com bordas finas e suporte a Dark Mode). */
 export function Modal({ title, onClose, children, maxWidth = 'max-w-2xl' }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className={cn('bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto', maxWidth)}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Fechar">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <div className={cn('bg-card border border-border rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300', maxWidth)}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">{title}</h2>
+          <button 
+            onClick={onClose} 
+            className="p-1 text-muted-foreground hover:text-foreground transition-all rounded-full hover:bg-muted active:scale-90" 
+            aria-label="Fechar"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
-        {children}
+        <div className="flex-1 overflow-y-auto p-1">
+          {children}
+        </div>
       </div>
     </div>
   )

@@ -11,8 +11,8 @@ export function Field({
   disabled?: boolean
 }) {
   return (
-    <div>
-      <label className={cn('block text-sm font-medium mb-1', disabled ? 'text-gray-400' : 'text-gray-700')}>
+    <div className="space-y-1.5">
+      <label className={cn('block text-[10px] font-bold uppercase tracking-widest ml-1', disabled ? 'text-muted-foreground/50' : 'text-muted-foreground')}>
         {label}
       </label>
       {children}
@@ -20,10 +20,25 @@ export function Field({
   )
 }
 
-/** Classe padrão para <input>/<select>/<textarea>. */
+/** Classe padrão para <input>/<select>/<textarea> estilo técnico pill. */
 export function inputClasses(disabled = false) {
   return cn(
-    'w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900',
-    disabled ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'border-gray-300',
+    'w-full rounded-full border px-4 py-2 text-sm transition-all focus:outline-none focus:ring-1 focus:ring-ring focus:bg-background',
+    disabled
+      ? 'border-border bg-muted/30 text-muted-foreground/50 cursor-not-allowed'
+      : 'border-border bg-muted/10 text-foreground placeholder:text-muted-foreground/30',
   )
 }
+
+/** Variante compacta do input pill — para linhas de itens densas (Compras, PDV). */
+export function inputClassesCompact(disabled = false) {
+  return cn(
+    'w-full rounded-full border px-3 py-1.5 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-ring',
+    disabled
+      ? 'border-border bg-muted/30 text-muted-foreground/50 cursor-not-allowed'
+      : 'border-border bg-card text-foreground placeholder:text-muted-foreground/30',
+  )
+}
+
+/** Rótulo compacto técnico, reutilizado nas linhas de item (grids densas). */
+export const compactLabelClass = 'text-[9px] font-black text-muted-foreground uppercase tracking-tighter mb-1.5 block'

@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { StatusBadge, type BadgeTone } from '@/components/ui/badge'
 import { Modal } from '@/components/ui/modal'
-import { Field, inputClasses } from '@/components/ui/field'
+import { Field, inputClasses, inputClassesCompact, compactLabelClass } from '@/components/ui/field'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 // ── tipos ──────────────────────────────────────────────────────────────────────
 
@@ -176,7 +178,6 @@ export default function ComprasPage() {
       if (!it.produto_id) { setErroForm('Selecione o produto de todos os itens.'); return }
       if (it.quantidade <= 0) { setErroForm('Quantidade deve ser maior que zero.'); return }
       if (it.preco_compra <= 0 || it.preco_venda <= 0) { setErroForm('Preços devem ser maiores que zero.'); return }
-      if (it.preco_compra >= it.preco_venda) { setErroForm('Preço de compra deve ser menor que o de venda.'); return }
     }
     setSalvando(true)
     try {
@@ -201,13 +202,13 @@ export default function ComprasPage() {
   }
 
   async function confirmarCompra(id: string) {
-    if (!confirm('Confirmar esta compra? O estoque será atualizado imediatamente.')) return
     setConfirmando(id)
     try {
       await api.post(`/api/v1/compras/${id}/confirmar`, {})
+      toast.success('Compra confirmada e estoque atualizado!')
       void carregarCompras()
     } catch (e) {
-      alert(e instanceof ApiError ? e.message : 'Erro ao confirmar compra.')
+      toast.error(e instanceof ApiError ? e.message : 'Erro ao confirmar compra.')
     } finally {
       setConfirmando(null)
     }
@@ -218,7 +219,7 @@ export default function ComprasPage() {
       const c = await api.get<Compra>(`/api/v1/compras/${id}`)
       setDetalhe(c)
     } catch {
-      alert('Não foi possível carregar o detalhe da compra.')
+      toast.error('Não foi possível carregar o detalhe da compra.')
     }
   }
 
@@ -235,17 +236,17 @@ export default function ComprasPage() {
   // ── render ───────────────────────────────────────────────────────────────────
 
   const colunas: Column<Compra>[] = [
-    { header: 'Data', sortAccessor: (c) => c.dt_compra, cell: (c) => <span className="whitespace-nowrap text-gray-900">{c.dt_compra}</span> },
-    { header: 'Fornecedor', sortAccessor: (c) => nomeFornecedor(c.fornecedor_id), cell: (c) => <span className="text-gray-900">{nomeFornecedor(c.fornecedor_id)}</span> },
-    { header: 'NF', hideBelow: 'sm', sortAccessor: (c) => c.nf, cell: (c) => <span className="text-gray-500">{c.nf || '—'}</span> },
-    { header: 'Total', align: 'right', sortAccessor: (c) => c.valor_total, cell: (c) => <span className="font-medium text-gray-900 whitespace-nowrap">{brl(c.valor_total)}</span> },
+    { header: 'Data', sortAccessor: (c) => c.dt_compra, cell: (c) => <span className="font-bold text-foreground">{c.dt_compra}</span> },
+    { header: 'Fornecedor', sortAccessor: (c) => nomeFornecedor(c.fornecedor_id), cell: (c) => <span className="text-muted-foreground">{nomeFornecedor(c.fornecedor_id)}</span> },
+    { header: 'NF', hideBelow: 'sm', sortAccessor: (c) => c.nf, cell: (c) => <span className="text-muted-foreground font-mono text-xs">{c.nf || '—'}</span>, isTechnical: true },
+    { header: 'Total', align: 'right', sortAccessor: (c) => c.valor_total, cell: (c) => <span className="font-black text-foreground font-mono">{brl(c.valor_total)}</span>, isTechnical: true },
     { header: 'Status', sortAccessor: (c) => STATUS_LABEL[c.status], cell: (c) => <StatusBadge tone={STATUS_TONE[c.status] ?? 'neutral'}>{STATUS_LABEL[c.status]}</StatusBadge> },
     {
       header: '',
       align: 'right',
       cell: (c) => (
         <div className="flex items-center justify-end gap-2">
-          <button title="Ver detalhes" onClick={() => verDetalhe(c.id)} className="text-gray-400 hover:text-gray-700">
+          <button title="Ver detalhes" onClick={() => verDetalhe(c.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted">
             <Eye className="h-4 w-4" />
           </button>
           {c.status === 'RASCUNHO' && (
@@ -253,7 +254,7 @@ export default function ComprasPage() {
               title="Confirmar compra"
               disabled={confirmando === c.id}
               onClick={() => confirmarCompra(c.id)}
-              className="text-gray-400 hover:text-green-600 disabled:opacity-50"
+              className="text-muted-foreground hover:text-green-500 transition-colors p-2 rounded-full hover:bg-green-500/10 disabled:opacity-50"
             >
               <CheckCircle className="h-4 w-4" />
             </button>
@@ -266,16 +267,16 @@ export default function ComprasPage() {
   return (
     <PageShell
       title="Compras"
-      subtitle="Entrada de mercadorias"
+      subtitle="Entrada de mercadorias no catálogo."
       maxWidth="max-w-6xl"
       actions={
         <Button onClick={abrirModal}>
           <Plus className="h-4 w-4" />
-          Nova Compra
+          Registrar Compra
         </Button>
       }
     >
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -287,29 +288,29 @@ export default function ComprasPage() {
 
       {/* ── Modal: nova compra ─────────────────────────────────────────────── */}
       {modalAberto && (
-        <Modal title="Nova Compra" onClose={() => setModalAberto(false)} maxWidth="max-w-3xl">
-          <div className="px-6 py-4 space-y-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Modal title="Nova Entrada de Mercadoria" onClose={() => setModalAberto(false)} maxWidth="max-w-4xl">
+          <div className="px-8 py-8 space-y-8 animate-in fade-in duration-300">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <Field label="Fornecedor *">
+                <Field label="Fornecedor Selecionado *">
                   <select value={fornecedorID} onChange={e => setFornecedorID(e.target.value)} className={inputClasses()}>
-                    <option value="">Selecione…</option>
+                    <option value="">Selecione um fornecedor cadastrado…</option>
                     {fornecedores.map(f => (
                       <option key={f.id} value={f.id}>{f.nome_fantasia || f.razao_social}</option>
                     ))}
                   </select>
                 </Field>
               </div>
-              <Field label="Data *">
+              <Field label="Data de Emissão *">
                 <input type="date" value={dtCompra} onChange={e => setDtCompra(e.target.value)} className={inputClasses()} />
               </Field>
               <div className="sm:col-span-3">
-                <Field label="Nota Fiscal">
+                <Field label="Número da Nota Fiscal (NF-e / NFC-e)">
                   <input
                     type="text"
                     value={nf}
                     onChange={e => setNf(e.target.value)}
-                    placeholder="Número da NF (opcional)"
+                    placeholder="Chave de acesso ou número da nota"
                     className={inputClasses()}
                   />
                 </Field>
@@ -317,26 +318,26 @@ export default function ComprasPage() {
             </div>
 
             {/* itens */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Itens</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Itens da Remessa</span>
                 <button
                   onClick={() => setItensForm(prev => [...prev, itemVazio()])}
-                  className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900"
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:opacity-70 transition-opacity"
                 >
-                  <Plus className="h-3 w-3" /> Adicionar item
+                  <Plus className="h-3 w-3" /> Incluir Produto
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {itensForm.map((it, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 rounded-lg border border-gray-200 p-3">
-                    <div className="col-span-4">
-                      <label className="mb-0.5 block text-xs text-gray-500">Produto</label>
+                  <div key={idx} className="grid grid-cols-12 gap-4 bg-muted/5 rounded-2xl border border-border/50 p-4 group hover:bg-muted/10 transition-colors">
+                    <div className="col-span-12 lg:col-span-4">
+                      <label className={compactLabelClass}>Produto</label>
                       <select
                         value={it.produto_id}
                         onChange={e => atualizarItem(idx, 'produto_id', e.target.value)}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none"
+                        className={inputClassesCompact()}
                       >
                         <option value="">Selecione…</option>
                         {produtos.map(p => (
@@ -344,36 +345,36 @@ export default function ComprasPage() {
                         ))}
                       </select>
                     </div>
-                    <div className="col-span-2">
-                      <label className="mb-0.5 block text-xs text-gray-500">Qtd</label>
+                    <div className="col-span-3 lg:col-span-2">
+                      <label className={compactLabelClass}>Qtd</label>
                       <input
                         type="number" min="1"
                         value={it.quantidade}
                         onChange={e => atualizarItem(idx, 'quantidade', Number(e.target.value))}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none"
+                        className={cn(inputClassesCompact(), 'font-mono')}
                       />
                     </div>
-                    <div className="col-span-2">
-                      <label className="mb-0.5 block text-xs text-gray-500">Custo (R$)</label>
+                    <div className="col-span-4 lg:col-span-2">
+                      <label className={compactLabelClass}>Custo (Unit)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={it.preco_compra}
                         onChange={e => atualizarItem(idx, 'preco_compra', Number(e.target.value))}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none"
+                        className={cn(inputClassesCompact(), 'font-mono')}
                       />
                     </div>
-                    <div className="col-span-2">
-                      <label className="mb-0.5 block text-xs text-gray-500">Venda (R$)</label>
+                    <div className="col-span-4 lg:col-span-2">
+                      <label className={compactLabelClass}>Venda (Sugerido)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={it.preco_venda}
                         onChange={e => atualizarItem(idx, 'preco_venda', Number(e.target.value))}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none"
+                        className={cn(inputClassesCompact(), 'font-mono')}
                       />
                     </div>
-                    <div className="col-span-1">
-                      <label className="mb-0.5 block text-xs text-gray-500">Margem</label>
-                      <span className={`block py-1 text-xs font-medium ${margemItem(it) > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                    <div className="col-span-1 flex flex-col items-center justify-center">
+                      <label className={compactLabelClass}>Margem</label>
+                      <span className={cn('text-[10px] font-black font-mono', margemItem(it) > 0 ? 'text-green-500' : 'text-muted-foreground/30')}>
                         {margemItem(it).toFixed(0)}%
                       </span>
                     </div>
@@ -381,25 +382,28 @@ export default function ComprasPage() {
                       <button
                         disabled={itensForm.length === 1}
                         onClick={() => removerItem(idx)}
-                        className="text-gray-400 hover:text-red-600 disabled:opacity-30"
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-full hover:bg-destructive/10 disabled:opacity-30 active:scale-90"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-3 text-right text-sm font-medium text-gray-900">
-                Total: {brl(totalForm())}
+              <div className="bg-muted/30 rounded-2xl p-6 flex justify-between items-end border border-border shadow-inner">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Total Estimado</span>
+                <span className="text-3xl font-black text-foreground font-mono tracking-tighter">{brl(totalForm())}</span>
               </div>
             </div>
 
-            {erroForm && <p className="text-sm text-red-600">{erroForm}</p>}
+            {erroForm && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
 
-            <div className="flex justify-end gap-3 pt-1">
+            <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button variant="secondary" onClick={() => setModalAberto(false)}>Cancelar</Button>
-              <Button onClick={salvarCompra} disabled={salvando}>{salvando ? 'Salvando…' : 'Criar Rascunho'}</Button>
+              <Button onClick={salvarCompra} disabled={salvando} className="min-w-40">
+                {salvando ? 'Salvando Remessa…' : 'Salvar como Rascunho'}
+              </Button>
             </div>
           </div>
         </Modal>
@@ -407,70 +411,77 @@ export default function ComprasPage() {
 
       {/* ── Modal: detalhe da compra ──────────────────────────────────────── */}
       {detalhe && (
-        <Modal title="Detalhe da Compra" onClose={() => setDetalhe(null)}>
-          <div className="px-6 py-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-xs text-gray-500">{detalhe.id}</p>
-              <StatusBadge tone={STATUS_TONE[detalhe.status] ?? 'neutral'}>{STATUS_LABEL[detalhe.status]}</StatusBadge>
+        <Modal title="Comprovante de Entrada" onClose={() => setDetalhe(null)} maxWidth="max-w-3xl">
+          <div className="px-8 py-8 space-y-8 animate-in fade-in duration-300">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 text-sm">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fornecedor</p>
+                <p className="text-foreground font-bold">{nomeFornecedor(detalhe.fornecedor_id)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Data Entrada</p>
+                <p className="text-foreground font-bold">{detalhe.dt_compra}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nota Fiscal</p>
+                <p className="text-foreground font-bold font-mono uppercase text-xs">{detalhe.nf || 'NÃO INFORMADA'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</p>
+                <StatusBadge tone={STATUS_TONE[detalhe.status] ?? 'neutral'}>{STATUS_LABEL[detalhe.status]}</StatusBadge>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Identificador Interno</p>
+                <p className="text-muted-foreground font-mono text-[10px] truncate">{detalhe.id}</p>
+              </div>
             </div>
 
-            <dl className="grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <dt className="text-gray-500">Fornecedor</dt>
-                <dd className="font-medium text-gray-900">{nomeFornecedor(detalhe.fornecedor_id)}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">Data</dt>
-                <dd className="font-medium text-gray-900">{detalhe.dt_compra}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">NF</dt>
-                <dd className="font-medium text-gray-900">{detalhe.nf || '—'}</dd>
-              </div>
-            </dl>
-
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {['Produto', 'Qtd', 'Custo', 'Venda', 'Margem'].map(h => (
-                    <th key={h} className="px-3 py-2 text-left text-xs font-medium text-gray-600">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(detalhe.itens ?? []).map(it => (
-                  <tr key={it.id}>
-                    <td className="px-3 py-2 text-gray-900">{nomeProduto(it.produto_id)}</td>
-                    <td className="px-3 py-2 text-gray-900">{it.quantidade}</td>
-                    <td className="px-3 py-2 text-gray-900">{brl(it.preco_compra)}</td>
-                    <td className="px-3 py-2 text-gray-900">{brl(it.preco_venda)}</td>
-                    <td className="px-3 py-2 text-green-700">{it.margem.toFixed(1)}%</td>
+            <div className="space-y-4">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Produtos Recebidos</p>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-muted-foreground opacity-50 font-black uppercase tracking-tighter">
+                    <th className="py-2 text-left">Descrição</th>
+                    <th className="py-2 text-right">Qtd</th>
+                    <th className="py-2 text-right">Custo</th>
+                    <th className="py-2 text-right">Venda</th>
+                    <th className="py-2 text-right">Margem</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={5} className="px-3 pt-3 text-right text-sm font-semibold text-gray-900">
-                    Total: {brl(detalhe.valor_total)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {(detalhe.itens ?? []).map(it => (
+                    <tr key={it.id} className="group hover:bg-muted/5 transition-colors">
+                      <td className="py-3 text-foreground font-bold">{nomeProduto(it.produto_id)}</td>
+                      <td className="py-3 text-right font-black font-mono">{it.quantidade}</td>
+                      <td className="py-3 text-right text-muted-foreground font-mono">{brl(it.preco_compra)}</td>
+                      <td className="py-3 text-right text-muted-foreground font-mono">{brl(it.preco_venda)}</td>
+                      <td className="py-3 text-right font-black font-mono text-green-500">{it.margem.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-            <div className="flex justify-between pt-1">
+            <div className="bg-muted/30 rounded-2xl p-8 flex justify-between items-end border border-border shadow-inner">
+               <span className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Total da Remessa</span>
+               <span className="text-4xl font-black text-primary font-mono tracking-tighter">{brl(detalhe.valor_total)}</span>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-border pt-6">
+              <Button variant="secondary" onClick={() => setDetalhe(null)}>Fechar</Button>
               {detalhe.status === 'RASCUNHO' && (
                 <Button
-                  variant="success"
+                  variant="primary"
                   disabled={confirmando === detalhe.id}
                   onClick={async () => {
                     await confirmarCompra(detalhe.id)
                     setDetalhe(null)
                   }}
+                  className="min-w-48"
                 >
-                  <CheckCircle className="h-4 w-4" /> Confirmar Compra
+                  <CheckCircle className="h-4 w-4" /> Confirmar e Dar Entrada
                 </Button>
               )}
-              <Button variant="secondary" className="ml-auto" onClick={() => setDetalhe(null)}>Fechar</Button>
             </div>
           </div>
         </Modal>

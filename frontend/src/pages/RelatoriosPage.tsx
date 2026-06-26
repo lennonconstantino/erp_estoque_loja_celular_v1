@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
-import { cn } from '@/lib/utils'
 import { PageShell } from '@/components/ui/page-shell'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { Field, inputClasses } from '@/components/ui/field'
+import { Tabs } from '@/components/ui/tabs'
 
 // --- tipos ---
 
@@ -130,47 +130,33 @@ export default function RelatoriosPage() {
   const precisaLimite = aba === 'mais-vendidos' || aba === 'menos-vendidos'
 
   const colunasAbaixo: Column<ProdutoAbaixoMinimo>[] = [
-    { header: 'Produto', sortAccessor: (p) => p.descricao, cell: (p) => <span className="font-medium text-gray-900">{p.descricao}</span> },
-    { header: 'Estoque Atual', align: 'right', sortAccessor: (p) => p.estoque_atual, cell: (p) => <span className="text-red-700 font-bold">{p.estoque_atual}</span> },
-    { header: 'Mínimo', align: 'right', sortAccessor: (p) => p.estoque_minimo, cell: (p) => <span className="text-gray-600">{p.estoque_minimo}</span> },
-    { header: 'Defasagem', align: 'right', sortAccessor: (p) => p.defasagem, cell: (p) => <span className="text-red-600 font-medium">−{p.defasagem}</span> },
+    { header: 'Produto', sortAccessor: (p) => p.descricao, cell: (p) => <span className="font-bold text-foreground">{p.descricao}</span> },
+    { header: 'Estoque Atual', align: 'right', sortAccessor: (p) => p.estoque_atual, cell: (p) => <span className="text-destructive font-bold">{p.estoque_atual}</span>, isTechnical: true },
+    { header: 'Mínimo', align: 'right', sortAccessor: (p) => p.estoque_minimo, cell: (p) => <span className="text-muted-foreground">{p.estoque_minimo}</span>, isTechnical: true },
+    { header: 'Defasagem', align: 'right', sortAccessor: (p) => p.defasagem, cell: (p) => <span className="text-destructive font-bold">−{p.defasagem}</span>, isTechnical: true },
   ]
 
   const listaVendidos = aba === 'mais-vendidos' ? maisVendidos : menosVendidos
   const colunasVendidos: Column<ProdutoVendido>[] = [
-    { header: 'Produto', sortAccessor: (p) => p.descricao, cell: (p) => <span className="font-medium text-gray-900">{p.descricao}</span> },
-    { header: 'Qtd Vendida', align: 'right', sortAccessor: (p) => p.total_vendido, cell: (p) => <span className="text-gray-700 font-bold">{p.total_vendido}</span> },
-    { header: 'Total (R$)', align: 'right', sortAccessor: (p) => p.total_valor, cell: (p) => <span className="text-gray-700">{brl(p.total_valor)}</span> },
+    { header: 'Produto', sortAccessor: (p) => p.descricao, cell: (p) => <span className="font-bold text-foreground">{p.descricao}</span> },
+    { header: 'Qtd Vendida', align: 'right', sortAccessor: (p) => p.total_vendido, cell: (p) => <span className="text-foreground font-bold">{p.total_vendido}</span>, isTechnical: true },
+    { header: 'Total (R$)', align: 'right', sortAccessor: (p) => p.total_valor, cell: (p) => <span className="text-muted-foreground font-mono">{brl(p.total_valor)}</span>, isTechnical: true },
   ]
 
   return (
     <PageShell title="Relatórios" subtitle="Análises de estoque, vendas e compras" maxWidth="max-w-6xl">
-      {/* abas */}
-      <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 overflow-x-auto">
-        {ABAS.map((a) => (
-          <button
-            key={a.key}
-            onClick={() => setAba(a.key)}
-            className={cn(
-              'flex-1 min-w-max px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              aba === a.key ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100',
-            )}
-          >
-            {a.label}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={ABAS} activeTab={aba} onTabChange={setAba} />
 
       {/* filtros */}
       {(precisaPeriodo || precisaLimite) && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-wrap gap-4 items-end">
+        <div className="bg-card rounded-2xl border border-border p-6 flex flex-wrap gap-6 items-end shadow-sm animate-in fade-in duration-500">
           {precisaPeriodo && (
             <>
-              <Field label="De">
-                <input type="date" value={de} onChange={(e) => setDe(e.target.value)} className={inputClasses()} />
+              <Field label="Período: De">
+                <input type="date" value={de} onChange={(e) => setDe(e.target.value)} className={inputClasses() + ' w-full sm:w-44'} />
               </Field>
               <Field label="Até">
-                <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} className={inputClasses()} />
+                <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} className={inputClasses() + ' w-full sm:w-44'} />
               </Field>
             </>
           )}
@@ -182,17 +168,17 @@ export default function RelatoriosPage() {
                 max={100}
                 value={limite}
                 onChange={(e) => setLimite(parseInt(e.target.value) || 10)}
-                className={inputClasses() + ' w-24'}
+                className={inputClasses() + ' w-full sm:w-28'}
               />
             </Field>
           )}
-          <Button onClick={carregar} disabled={carregando}>
-            {carregando ? 'Carregando…' : 'Atualizar'}
+          <Button onClick={carregar} disabled={carregando} className="min-w-32 h-10">
+            {carregando ? 'Carregando…' : 'Atualizar Dados'}
           </Button>
         </div>
       )}
 
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       {/* conteúdo por aba */}
       {aba === 'abaixo-minimo' && (
@@ -202,7 +188,7 @@ export default function RelatoriosPage() {
           rowKey={(p) => p.id}
           loading={carregando}
           empty="Nenhum produto abaixo do mínimo."
-          rowClassName={() => 'bg-red-50 hover:bg-red-100'}
+          rowClassName={() => 'bg-destructive/5 hover:bg-destructive/10 transition-colors'}
         />
       )}
 
@@ -217,17 +203,17 @@ export default function RelatoriosPage() {
       )}
 
       {aba === 'resumo-vendas' && resumoVendas && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <CardMetrica titulo="Total de Vendas" valor={String(resumoVendas.total_vendas)} sufixo="vendas" />
-          <CardMetrica titulo="Valor Total" valor={brl(resumoVendas.valor_total)} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+          <CardMetrica titulo="Volume de Vendas" valor={String(resumoVendas.total_vendas)} sufixo="vendas" />
+          <CardMetrica titulo="Faturamento Total" valor={brl(resumoVendas.valor_total)} />
           <CardMetrica titulo="Ticket Médio" valor={brl(resumoVendas.ticket_medio)} />
         </div>
       )}
 
       {aba === 'resumo-compras' && resumoCompras && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <CardMetrica titulo="Total de Compras" valor={String(resumoCompras.total_compras)} sufixo="compras" />
-          <CardMetrica titulo="Valor Total" valor={brl(resumoCompras.valor_total)} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+          <CardMetrica titulo="Volume de Compras" valor={String(resumoCompras.total_compras)} sufixo="compras" />
+          <CardMetrica titulo="Investimento Total" valor={brl(resumoCompras.valor_total)} />
         </div>
       )}
     </PageShell>
@@ -236,12 +222,12 @@ export default function RelatoriosPage() {
 
 function CardMetrica({ titulo, valor, sufixo }: { titulo: string; valor: string; sufixo?: string }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5">
-      <p className="text-xs text-gray-500 mb-1">{titulo}</p>
-      <p className="text-2xl font-bold text-gray-900">
-        {valor}
-        {sufixo && <span className="text-sm font-normal text-gray-500 ml-1">{sufixo}</span>}
-      </p>
+    <div className="bg-card rounded-2xl border border-border p-8 shadow-sm group hover:border-primary/40 hover:shadow-md transition-all duration-300">
+      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 leading-none opacity-60 group-hover:opacity-100 transition-opacity">{titulo}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-black tracking-tighter text-foreground font-mono leading-none">{valor}</span>
+        {sufixo && <span className="text-xs font-black text-muted-foreground uppercase tracking-widest opacity-40">{sufixo}</span>}
+      </div>
     </div>
   )
 }

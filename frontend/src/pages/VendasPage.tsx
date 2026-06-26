@@ -7,6 +7,7 @@ import { Button, buttonClasses } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { StatusBadge, type BadgeTone } from '@/components/ui/badge'
 import { Modal } from '@/components/ui/modal'
+import { toast } from 'sonner'
 
 interface DetalheVenda {
   id: string
@@ -80,7 +81,7 @@ export default function VendasPage() {
       const v = await api.get<Venda>(`/api/v1/vendas/${id}`)
       setDetalhe(v)
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao buscar venda')
+      toast.error(e instanceof Error ? e.message : 'Erro ao buscar venda')
     }
   }
 
@@ -90,11 +91,9 @@ export default function VendasPage() {
       const v = await api.post<Venda>(`/api/v1/vendas/${id}/confirmar`, {})
       setDetalhe(v)
       await carregarVendas()
-      if (v.doc_fiscal_numero) {
-        alert(`Venda confirmada!\nDocumento fiscal: ${v.doc_fiscal_numero}`)
-      }
+      toast.success('Venda confirmada com sucesso!')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao confirmar venda')
+      toast.error(e instanceof Error ? e.message : 'Erro ao confirmar venda')
     } finally {
       setConfirmando(false)
     }
@@ -105,20 +104,25 @@ export default function VendasPage() {
   }, [])
 
   const colunas: Column<Venda>[] = [
-    { header: 'Data', sortAccessor: (v) => new Date(v.dt_venda).getTime(), cell: (v) => new Date(v.dt_venda).toLocaleDateString('pt-BR') },
+    { 
+      header: 'Data', 
+      sortAccessor: (v) => new Date(v.dt_venda).getTime(), 
+      cell: (v) => <span className="font-bold text-foreground">{new Date(v.dt_venda).toLocaleDateString('pt-BR')}</span> 
+    },
     {
       header: 'Cliente',
       sortAccessor: (v) => (v.consumidor_final ? '' : v.cliente_id ?? ''),
       cell: (v) =>
         v.consumidor_final ? (
-          <span className="text-gray-400 italic">Consumidor final</span>
+          <span className="text-muted-foreground/50 italic text-xs uppercase tracking-widest font-bold">Consumidor final</span>
         ) : (
-          <span className="font-mono text-xs">{v.cliente_id?.slice(0, 8)}…</span>
+          <span className="font-mono text-xs text-muted-foreground">{v.cliente_id?.slice(0, 8)}…</span>
         ),
+      isTechnical: true,
     },
-    { header: 'Forma Pgto', hideBelow: 'sm', sortAccessor: (v) => FORMA_PGTO_LABEL[v.forma_pgto] ?? v.forma_pgto, cell: (v) => FORMA_PGTO_LABEL[v.forma_pgto] ?? v.forma_pgto },
-    { header: 'Doc. Fiscal', hideBelow: 'md', sortAccessor: (v) => v.doc_fiscal, cell: (v) => v.doc_fiscal },
-    { header: 'Total', align: 'right', sortAccessor: (v) => v.valor_total, cell: (v) => <span className="font-medium text-gray-900">{brl(v.valor_total)}</span> },
+    { header: 'Pagamento', hideBelow: 'sm', sortAccessor: (v) => FORMA_PGTO_LABEL[v.forma_pgto] ?? v.forma_pgto, cell: (v) => <span className="text-muted-foreground">{FORMA_PGTO_LABEL[v.forma_pgto] ?? v.forma_pgto}</span> },
+    { header: 'Documento', hideBelow: 'md', sortAccessor: (v) => v.doc_fiscal, cell: (v) => <span className="text-muted-foreground font-mono text-[10px]">{v.doc_fiscal}</span>, isTechnical: true },
+    { header: 'Total', align: 'right', sortAccessor: (v) => v.valor_total, cell: (v) => <span className="font-black text-foreground font-mono">{brl(v.valor_total)}</span>, isTechnical: true },
     {
       header: 'Status',
       sortAccessor: (v) => STATUS_LABEL[v.status] ?? v.status,
@@ -128,7 +132,7 @@ export default function VendasPage() {
       header: '',
       align: 'right',
       cell: (v) => (
-        <button onClick={() => abrirDetalhe(v.id)} className="text-gray-400 hover:text-gray-700" title="Ver detalhe">
+        <button onClick={() => abrirDetalhe(v.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted" title="Ver detalhe">
           <Eye className="w-4 h-4" />
         </button>
       ),
@@ -138,7 +142,7 @@ export default function VendasPage() {
   return (
     <PageShell
       title="Vendas"
-      subtitle="Histórico de vendas e PDV"
+      subtitle="Histórico de transações e frente de caixa."
       maxWidth="max-w-6xl"
       actions={
         <Link to="/vendas/nova" className={buttonClasses('primary')}>
@@ -147,7 +151,7 @@ export default function VendasPage() {
         </Link>
       }
     >
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -158,63 +162,55 @@ export default function VendasPage() {
       />
 
       {detalhe && (
-        <Modal title="Detalhe da Venda" onClose={() => setDetalhe(null)}>
-          <div className="px-6 py-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500">ID</p>
-                <p className="font-mono text-xs text-gray-700">{detalhe.id}</p>
+        <Modal title="Comprovante de Venda" onClose={() => setDetalhe(null)} maxWidth="max-w-xl">
+          <div className="px-8 py-8 space-y-8 animate-in fade-in duration-300">
+            <div className="grid grid-cols-2 gap-8 text-sm">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Identificador</p>
+                <p className="font-mono text-xs text-foreground truncate" title={detalhe.id}>{detalhe.id}</p>
               </div>
-              <div>
-                <p className="text-gray-500">Status</p>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status Atual</p>
                 <StatusBadge tone={STATUS_TONE[detalhe.status] ?? 'neutral'}>
                   {STATUS_LABEL[detalhe.status] ?? detalhe.status}
                 </StatusBadge>
               </div>
-              <div>
-                <p className="text-gray-500">Data</p>
-                <p className="text-gray-700">{new Date(detalhe.dt_venda).toLocaleString('pt-BR')}</p>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Data e Hora</p>
+                <p className="text-foreground font-bold">{new Date(detalhe.dt_venda).toLocaleString('pt-BR')}</p>
               </div>
-              <div>
-                <p className="text-gray-500">Forma Pgto</p>
-                <p className="text-gray-700">{FORMA_PGTO_LABEL[detalhe.forma_pgto] ?? detalhe.forma_pgto}</p>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Forma de Pagamento</p>
+                <p className="text-foreground font-bold">{FORMA_PGTO_LABEL[detalhe.forma_pgto] ?? detalhe.forma_pgto}</p>
               </div>
-              <div>
-                <p className="text-gray-500">Doc. Fiscal</p>
-                <p className="text-gray-700">{detalhe.doc_fiscal}</p>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tipo de Documento</p>
+                <p className="text-foreground font-bold">{detalhe.doc_fiscal}</p>
               </div>
-              <div>
-                <p className="text-gray-500">Nº Fiscal</p>
-                <p className="text-gray-700">{detalhe.doc_fiscal_numero || '—'}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Desconto</p>
-                <p className="text-gray-700">{brl(detalhe.desconto)}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Total</p>
-                <p className="text-lg font-bold text-gray-900">{brl(detalhe.valor_total)}</p>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nº Documento</p>
+                <p className="text-foreground font-bold font-mono">{detalhe.doc_fiscal_numero || 'PENDENTE'}</p>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Itens</h3>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Produto</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Qtd</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Preço Unit.</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Subtotal</th>
+            <div className="space-y-4">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Itens da Transação</p>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-muted-foreground opacity-50 font-black uppercase tracking-tighter">
+                    <th className="py-2 text-left">Referência</th>
+                    <th className="py-2 text-right">Qtd</th>
+                    <th className="py-2 text-right">Unitário</th>
+                    <th className="py-2 text-right">Subtotal</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border/50">
                   {detalhe.itens.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-3 py-2 font-mono text-xs text-gray-600">{item.produto_id.slice(0, 8)}…</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{item.quantidade}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{brl(item.preco_unitario)}</td>
-                      <td className="px-3 py-2 text-right font-medium text-gray-900">
+                    <tr key={item.id} className="group hover:bg-muted/5 transition-colors">
+                      <td className="py-3 font-mono text-muted-foreground">{item.produto_id.slice(0, 12)}…</td>
+                      <td className="py-3 text-right font-bold">{item.quantidade}</td>
+                      <td className="py-3 text-right text-muted-foreground font-mono">{brl(item.preco_unitario)}</td>
+                      <td className="py-3 text-right font-black font-mono">
                         {brl(item.quantidade * item.preco_unitario)}
                       </td>
                     </tr>
@@ -223,13 +219,25 @@ export default function VendasPage() {
               </table>
             </div>
 
-            {detalhe.status === 'RASCUNHO' && (
-              <div className="border-t border-gray-200 pt-4 flex justify-end">
-                <Button variant="success" onClick={() => confirmarVenda(detalhe.id)} disabled={confirmando}>
-                  {confirmando ? 'Confirmando…' : 'Confirmar Venda'}
+            <div className="bg-muted/30 rounded-2xl p-6 space-y-2 border border-border shadow-inner">
+               <div className="flex justify-between text-xs text-muted-foreground font-bold uppercase tracking-widest">
+                  <span>Descontos Aplicados</span>
+                  <span className="font-mono">{brl(detalhe.desconto)}</span>
+               </div>
+               <div className="flex justify-between items-end">
+                  <span className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Valor Final</span>
+                  <span className="text-3xl font-black text-primary font-mono tracking-tighter">{brl(detalhe.valor_total)}</span>
+               </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-border pt-6">
+              <Button variant="secondary" onClick={() => setDetalhe(null)}>Fechar</Button>
+              {detalhe.status === 'RASCUNHO' && (
+                <Button variant="primary" onClick={() => confirmarVenda(detalhe.id)} disabled={confirmando} className="min-w-40">
+                  {confirmando ? 'Processando…' : 'Finalizar Venda'}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Modal>
       )}

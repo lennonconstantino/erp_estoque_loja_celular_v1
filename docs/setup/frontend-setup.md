@@ -26,7 +26,7 @@ Se um pacote recém-publicado for genuinamente necessário (ex.: correção urge
 - **Estado:** `useState` / `useReducer` / `useContext` primeiro. Só recorra a bibliotecas externas de estado quando a dor for real.
 - **Formulários:** `<form>` nativo + `FormData` primeiro.
 - **Validação:** só adicionar biblioteca de schema quando for necessária validação em runtime nas fronteiras do sistema.
-- **Componentes de UI:** primitivos shadcn via `pnpm dlx shadcn@latest add <nome>`. Não reimplementar o que o shadcn já oferece.
+- **Componentes de UI:** primitivos shadcn via `pnpm dlx shadcn@latest add <nome>`. Não reimplementar o que o shadcn já oferece. Já em uso: `@radix-ui/react-dialog` + `cmdk` (paleta de comandos), `sonner` (toasts) e `next-themes` (dependência transitiva do template do `sonner` — o tema do app é o `@/lib/theme`, não o `next-themes`).
 
 Antes de adicionar um pacote, verifique:
 
@@ -63,14 +63,24 @@ nasceu de cada página reimplementar a própria casca), os primitivos abaixo sã
 fonte única de verdade. Páginas novas **devem** compô-los em vez de remontar
 cabeçalho/tabela/modal na mão.
 
+Todos os primitivos usam **tokens semânticos do tema** (`bg-card`, `text-foreground`,
+`border-border`, `text-muted-foreground`, `text-primary`, `text-destructive`…) — nunca
+cores cruas (`text-red-600`, `bg-white`, azul/índigo ad-hoc). É o que garante a
+adaptação automática a Dark/Light (ver [Tema (Dark/Light)](#tema-darklight)).
+
 | Componente | Papel |
 |------------|-------|
-| `page-shell.tsx` → `PageShell` | Casca da página: barra de cabeçalho branca (botão voltar + título/subtítulo + `actions`) e `<main>` centralizado (`maxWidth` configurável). |
-| `button.tsx` → `Button` / `buttonClasses` | Botão padrão com variantes `primary` (cinza-900), `secondary`, `danger`, `success`. **Nunca** usar azul/índigo ad-hoc. `buttonClasses(...)` aplica o estilo a um `<Link>`. |
-| `data-table.tsx` → `DataTable<T>` | Tabela padrão (cartão branco, cabeçalho cinza, hover, estados de loading/vazio) com **ordenação por coluna** embutida. |
+| `page-shell.tsx` → `PageShell` | Casca da página: **`Sidebar` fixa** + cabeçalho técnico (breadcrumb/voltar + `CommandPalette` + `ThemeToggle` + `actions`) e `<main>` centralizado (`maxWidth` configurável). |
+| `sidebar.tsx` → `Sidebar` | Navegação lateral fixa (grupos Principal/Gestão via `NavLink`) + logout. |
+| `button.tsx` → `Button` / `buttonClasses` | Botão pill com variantes `primary`, `secondary`, `danger`, `success`, `ghost` e tamanhos `sm`/`md`/`icon`. **Nunca** usar azul/índigo ad-hoc. `buttonClasses(...)` aplica o estilo a um `<Link>`. |
+| `data-table.tsx` → `DataTable<T>` | Tabela padrão (cartão, cabeçalho minimalista, hover, estados de loading/vazio) com **ordenação por coluna** embutida. |
+| `tabs.tsx` → `Tabs<T>` | Abas técnicas estilo pill (controladas via `activeTab`/`onTabChange`). Em uso na tela de Relatórios. |
 | `badge.tsx` → `StatusBadge` | Selo de status com tons `success` / `neutral` / `warning` / `danger`. |
-| `modal.tsx` → `Modal` | Janela modal padrão (overlay + cabeçalho + botão fechar). |
-| `field.tsx` → `Field` / `inputClasses` | Rótulo de formulário e classe padrão de `input`/`select`/`textarea` (foco em cinza-900). |
+| `modal.tsx` → `Modal` | Janela modal padrão (overlay + cabeçalho + botão fechar; `maxWidth` até `max-w-4xl`). |
+| `field.tsx` → `Field` / `inputClasses` / `inputClassesCompact` / `compactLabelClass` | Rótulo de formulário + classe pill de `input`/`select`/`textarea`. Use `inputClasses()` no padrão e **`inputClassesCompact()` + `compactLabelClass`** nas grades densas de itens (linhas de Compras e do PDV). |
+| `command-palette.tsx` / `command.tsx` / `dialog.tsx` | Paleta de comandos (⌘K) para navegação rápida, sobre os primitivos shadcn `Command`/`Dialog` (Radix Dialog + `cmdk`). |
+| `theme-toggle.tsx` → `ThemeToggle` | Alternância Dark/Light (consome `useTheme` de `@/lib/theme`). |
+| `sonner.tsx` → `Toaster` + `toast` | Notificações (sucesso/erro). `<Toaster>` é montado uma vez em `App.tsx`; páginas chamam `toast.success/error`. |
 
 ### Ordenação de tabelas
 
@@ -83,6 +93,27 @@ pt-BR; número, numericamente; datas, por timestamp). O cabeçalho cicla
 > Em telas paginadas no servidor (clientes, produtos, categorias, estoque) a
 > ordenação atua sobre a **página atual**. Ordenação global exigiria parâmetros
 > `sort`/`order` nos endpoints — ainda não implementado.
+
+## Tema (Dark/Light)
+
+O tema é gerido por `@/lib/theme` (`ThemeProvider` + hook `useTheme`), montado no topo
+da árvore em `App.tsx`. Ele alterna a classe `.dark` no `<html>` e persiste a escolha
+em `localStorage` (chave `theme`), com fallback para `prefers-color-scheme` na primeira
+visita. O `ThemeToggle` no cabeçalho do `PageShell` dispara `toggleTheme()`.
+
+Os **tokens** (cores, raio) ficam em `src/index.css`: o bloco `:root` define o tema
+claro e `.dark` o escuro, ambos como variáveis HSL consumidas pelo Tailwind
+(`bg-background`, `text-foreground`, `bg-card`, `border-border`, `text-primary`,
+`text-destructive`, etc.). **Regra prática:** estilize componentes só com esses tokens —
+qualquer cor crua (`text-red-600`, `bg-white`, `bg-indigo-500`) não acompanha a troca de
+tema e quebra a consistência. Para status/erros use os tokens `destructive`/`success` (ou
+o `StatusBadge`), não `red-600`/`green-600` soltos.
+
+> **Pendência conhecida:** `sonner.tsx` lê `useTheme` de `next-themes` (resíduo do
+> template shadcn), mas o provider real é o `@/lib/theme` — então os toasts caem no tema
+> `system` em vez de seguir o toggle. Trocar por `useTheme` de `@/lib/theme` quando for
+> mexer em notificações. Ver também as pendências de acessibilidade em
+> [Pendências e próximos passos](#pendências-e-próximos-passos).
 
 ## Estilo de código
 
@@ -125,3 +156,23 @@ Variável obrigatória:
 - Reimplementar manualmente um primitivo que o shadcn já oferece.
 - Usar Next.js, SSR ou qualquer framework que exija um servidor Node na frente da SPA.
 - Usar `@supabase/supabase-js` no frontend — o Supabase é usado apenas como host do PostgreSQL pelo backend.
+
+## Pendências e próximos passos
+
+Itens de polimento levantados na padronização visual/refino do kit, ainda em aberto:
+
+- **Toasts no tema certo:** `sonner.tsx` importa `useTheme` de `next-themes`, mas o
+  provider é o `@/lib/theme` → toasts ficam em `system`. Trocar a importação.
+- **Acessibilidade de formulários:** `Field` renderiza `<label>` sem `htmlFor` e os
+  inputs não têm `id`/`name`/`autocomplete` — associar rótulo↔controle e adicionar
+  `autocomplete`/`inputMode` adequados (email, tel, postal-code, numeric).
+- **Botões-ícone:** vários usam só `title`; adicionar `aria-label` (ex.: editar, ver
+  detalhe, fechar).
+- **`prefers-reduced-motion`:** as animações `animate-in`/`zoom`/`slide` não têm
+  variante reduzida — adicionar bloco global em `index.css`.
+- **Navegação semântica:** o botão "voltar" do `PageShell` usa `<button onClick={navigate}>`;
+  trocar por `<Link>` para suportar Cmd/middle-click.
+- **`color-scheme`/`theme-color`:** declarar `color-scheme` no `.dark` e
+  `<meta name="theme-color">` no `index.html` (corrige scrollbars/controles nativos).
+
+> Estes itens **não bloqueiam** o uso atual; são melhorias de a11y/UX a agendar.

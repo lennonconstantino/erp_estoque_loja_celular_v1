@@ -261,6 +261,28 @@ resta a Fase 9 — deploy).
 - [x] `pnpm tsc --noEmit` e `pnpm lint` sem erros
 - [x] Rebuild do container `frontend` e telas validadas no browser
 
+### Refino visual técnico + Dark/Light mode
+
+> Segunda passada de padronização: tema escuro/claro, primitivos novos e
+> consolidação dos formulários no estilo pill/técnico.
+
+- [x] **Tema Dark/Light** via `@/lib/theme` (`ThemeProvider` + `useTheme`), classe
+  `.dark` no `<html>`, tokens HSL em `index.css` e `ThemeToggle` no `PageShell`
+- [x] Migrar telas para **tokens semânticos** (`bg-card`/`text-foreground`/`text-destructive`…)
+  removendo cores cruas (ex.: `text-red-600` em Categorias; tendência negativa do Dashboard)
+- [x] Novos primitivos no kit: `Tabs<T>` (pill), `Sidebar`, `CommandPalette`/`Command`/`Dialog`
+  (⌘K), `ThemeToggle`, `Toaster`/`toast` (`sonner`)
+- [x] `PageShell` reestruturado: `Sidebar` fixa + cabeçalho com paleta de comandos e toggle de tema
+- [x] Helpers de formulário compacto no kit (`inputClassesCompact`/`compactLabelClass`) e adoção
+  nas grades densas de itens (Compras, NovaVenda/PDV) — fim das classes ad-hoc duplicadas
+- [x] Padronização final das páginas restantes (Categorias: erros/paginação no padrão; Produtos,
+  Vendas, Compras, Fornecedores conferidos)
+- [x] **Correção de build:** `cn` ausente em Compras, `Modal` aceitar `max-w-4xl`, imports
+  não usados (NovaVenda, Relatórios), `icon: any` → `LucideIcon` no Dashboard
+- [x] Verificação: `pnpm tsc --noEmit`, `pnpm lint` e `pnpm build` sem erros
+- [ ] Pendências de a11y/UX e toast-tema documentadas em
+  [docs/setup/frontend-setup.md](setup/frontend-setup.md#pendências-e-próximos-passos) — agendar
+
 ---
 
 ## Critério de Aceitação (conforme brief do cliente)

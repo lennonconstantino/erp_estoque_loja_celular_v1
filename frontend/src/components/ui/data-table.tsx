@@ -8,12 +8,13 @@ export interface Column<T> {
   header: ReactNode
   cell: (row: T) => ReactNode
   align?: 'left' | 'right' | 'center'
-  /** Esconde a coluna abaixo do breakpoint informado. */
   hideBelow?: 'sm' | 'md'
   thClassName?: string
   tdClassName?: string
   /** Torna a coluna ordenável: retorna o valor usado na comparação. */
   sortAccessor?: (row: T) => SortValue
+  /** Aplica fonte mono e tamanho reduzido para dados técnicos (SKU, preços). */
+  isTechnical?: boolean
 }
 
 interface DataTableProps<T> {
@@ -38,7 +39,7 @@ function comparar(a: SortValue, b: SortValue): number {
   return String(a).localeCompare(String(b), 'pt-BR', { numeric: true, sensitivity: 'base' })
 }
 
-/** Tabela padrão (cartão branco, cabeçalho cinza, linhas com hover, ordenação opcional). */
+/** Tabela técnica (cartão escuro/claro adaptável, cabeçalho minimalista, tipografia mono). */
 export function DataTable<T>({
   columns,
   rows,
@@ -61,25 +62,25 @@ export function DataTable<T>({
     setSort((prev) => {
       if (!prev || prev.index !== index) return { index, dir: 'asc' }
       if (prev.dir === 'asc') return { index, dir: 'desc' }
-      return null // terceiro clique remove a ordenação
+      return null
     })
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
+    <div className="bg-card rounded-xl border border-border overflow-hidden overflow-x-auto shadow-sm">
       {loading ? (
-        <p className="p-6 text-sm text-gray-500 text-center">Carregando…</p>
+        <p className="p-6 text-sm text-muted-foreground text-center">Carregando…</p>
       ) : rowsOrdenadas.length === 0 ? (
-        <p className="p-6 text-sm text-gray-500 text-center">{empty}</p>
+        <p className="p-6 text-sm text-muted-foreground text-center">{empty}</p>
       ) : (
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-muted/10 border-b border-border">
             <tr>
               {columns.map((c, i) => {
                 const ordenavel = !!c.sortAccessor
                 const ativa = sort?.index === i
                 const baseTh = cn(
-                  'px-4 py-3 font-medium text-gray-600',
+                  'px-4 py-3 font-semibold text-muted-foreground tracking-tight uppercase text-[10px]',
                   alignCls[c.align ?? 'left'],
                   c.hideBelow && hideCls[c.hideBelow],
                   c.thClassName,
@@ -93,19 +94,19 @@ export function DataTable<T>({
                       type="button"
                       onClick={() => alternarOrdenacao(i)}
                       className={cn(
-                        'inline-flex items-center gap-1 font-medium hover:text-gray-900',
+                        'inline-flex items-center gap-1 hover:text-foreground transition-colors outline-none',
                         c.align === 'right' && 'flex-row-reverse',
                         c.align === 'center' && 'mx-auto',
-                        ativa ? 'text-gray-900' : 'text-gray-600',
+                        ativa ? 'text-foreground' : 'text-muted-foreground',
                       )}
                     >
                       {c.header}
                       {ativa ? (
                         sort!.dir === 'asc'
-                          ? <ChevronUp className="w-3.5 h-3.5" />
-                          : <ChevronDown className="w-3.5 h-3.5" />
+                          ? <ChevronUp className="w-3 h-3" />
+                          : <ChevronDown className="w-3 h-3" />
                       ) : (
-                        <ChevronsUpDown className="w-3.5 h-3.5 text-gray-300" />
+                        <ChevronsUpDown className="w-3 h-3 opacity-20" />
                       )}
                     </button>
                   </th>
@@ -113,14 +114,15 @@ export function DataTable<T>({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-border/50">
             {rowsOrdenadas.map((row) => (
-              <tr key={rowKey(row)} className={cn('hover:bg-gray-50', rowClassName?.(row))}>
+              <tr key={rowKey(row)} className={cn('hover:bg-muted/5 transition-colors group', rowClassName?.(row))}>
                 {columns.map((c, i) => (
                   <td
                     key={i}
                     className={cn(
-                      'px-4 py-3 text-gray-700',
+                      'px-4 py-3 text-foreground/80',
+                      c.isTechnical && 'font-mono text-xs text-foreground/60 tracking-tight',
                       alignCls[c.align ?? 'left'],
                       c.hideBelow && hideCls[c.hideBelow],
                       c.tdClassName,
