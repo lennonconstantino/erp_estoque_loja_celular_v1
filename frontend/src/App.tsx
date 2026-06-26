@@ -5,6 +5,7 @@ import DashboardPage from '@/pages/DashboardPage'
 import FornecedoresPage from '@/pages/FornecedoresPage'
 import CategoriasPage from '@/pages/CategoriasPage'
 import ProdutosPage from '@/pages/ProdutosPage'
+import ClientesPage from '@/pages/ClientesPage'
 import AjustesEstoquePage from '@/pages/AjustesEstoquePage'
 import ComprasPage from '@/pages/ComprasPage'
 import VendasPage from '@/pages/VendasPage'
@@ -21,6 +22,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/clientes"
+          element={
+            <PrivateRoute>
+              <ClientesPage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/fornecedores"
           element={
@@ -46,7 +55,7 @@ export default function App() {
           }
         />
         <Route
-          path="/estoque"
+          path="/estoque/ajustes"
           element={
             <PrivateRoute>
               <AjustesEstoquePage />

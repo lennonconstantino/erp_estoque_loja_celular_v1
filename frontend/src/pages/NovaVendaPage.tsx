@@ -53,7 +53,7 @@ export default function NovaVendaPage() {
   const total = Math.max(0, totalItens - desconto)
 
   useEffect(() => {
-    api.get<{ items: Produto[] }>('/produtos?limit=200').then((d) => {
+    api.get<{ items: Produto[] }>('/api/v1/produtos?limit=200').then((d) => {
       setProdutos((d.items ?? []).filter((p) => p.ativo && p.disponivel))
     })
   }, [])
@@ -64,7 +64,7 @@ export default function NovaVendaPage() {
     setErro('')
     try {
       const cpf = cpfBusca.replace(/\D/g, '')
-      const data = await api.get<{ items: Cliente[] }>(`/clientes?q=${cpf}&limit=1`)
+      const data = await api.get<{ items: Cliente[] }>(`/api/v1/clientes?q=${cpf}&limit=1`)
       const encontrado = (data.items ?? [])[0]
       if (encontrado) {
         setCliente(encontrado)
@@ -143,10 +143,10 @@ export default function NovaVendaPage() {
       }
 
       interface Venda { id: string; doc_fiscal_numero?: string }
-      const venda = await api.post<Venda>('/vendas', body)
+      const venda = await api.post<Venda>('/api/v1/vendas', body)
 
       if (confirmar) {
-        const confirmada = await api.post<Venda>(`/vendas/${venda.id}/confirmar`, {})
+        const confirmada = await api.post<Venda>(`/api/v1/vendas/${venda.id}/confirmar`, {})
         if (confirmada.doc_fiscal_numero) {
           alert(`Venda confirmada!\nDocumento fiscal: ${confirmada.doc_fiscal_numero}`)
         }

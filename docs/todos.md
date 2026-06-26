@@ -1,8 +1,11 @@
 # Lista de Verificação — Implementação do ERP
 
-Estado atual: migrations 000001–000009 prontas, plataforma (auth JWT, httpserver,
-resilience, config, database) pronta, módulo `clientes` totalmente implementado,
-camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
+Estado atual: migrations 000001–000010 prontas (inclui `seed_demo`), plataforma
+(auth JWT, httpserver, resilience, config, database) pronta, **todos os módulos
+de negócio implementados** (iam, clientes, fornecedores, catálogo, estoque,
+compras, vendas, relatórios). Frontend completo: todas as telas existem e
+compartilham o **kit de UI** em `@/components/ui` (Fases 1–8 e 10 concluídas;
+resta a Fase 9 — deploy).
 
 > **Ordem lógica:** backend antes do frontend — o frontend consome a API.
 > A partir da fase 3 (cadastros) é possível trabalhar em paralelo.
@@ -223,6 +226,40 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 - [ ] Fazer deploy; verificar `/health` do backend
 - [ ] Verificar migrations aplicadas no Supabase (tables nos schemas corretos)
 - [ ] Testar ciclo completo em produção: login → compra → venda → ajuste → relatório
+
+---
+
+## Fase 10 — Polimento de UI, consistência e dados de demonstração
+
+> Trabalho pós-MVP: dados de demonstração, correção de carga e padronização
+> visual de todas as telas. Não altera o backend de negócio.
+
+### Dados de demonstração e roteamento
+
+- [x] Criar migration `000010_seed_demo` (idempotente): fornecedores, clientes, produtos com saldo, compras e vendas CONFIRMADA
+- [x] Criar `pages/ClientesPage.tsx` e registrar rota `/clientes` em `App.tsx`
+- [x] Corrigir rota de ajuste de estoque para `/estoque/ajustes` (estava `/estoque`, caía no catch-all)
+
+### Correção de carga de dados (bug "Erro desconhecido")
+
+- [x] Adicionar o prefixo `/api/v1` às chamadas de Categorias, Produtos, Vendas, Estoque, Relatórios e NovaVenda (faltava → 404 → "Erro desconhecido")
+- [x] Confirmar via API: categorias, produtos, vendas e relatórios retornam dados
+
+### Kit de UI compartilhado (`@/components/ui`)
+
+- [x] Criar `PageShell` (casca: cabeçalho + `<main>`), `Button`/`buttonClasses`, `StatusBadge`, `DataTable<T>`, `Modal`, `Field`/`inputClasses`
+- [x] Refatorar todas as telas para o kit (Categorias, Produtos, Vendas, Estoque, Relatórios, Compras, Clientes, Fornecedores) — padrão único (cinza-900, tabelas com borda, sem azul/índigo ad-hoc)
+
+### Ordenação de tabelas
+
+- [x] Implementar ordenação por coluna no `DataTable` (`sortAccessor`; ciclo asc → desc → sem ordenação; comparação numérica/`localeCompare` pt-BR/data)
+- [x] Habilitar colunas ordenáveis em todas as telas com dados tabulados
+- [ ] (Opcional) Ordenação global no servidor via parâmetros `sort`/`order` nos endpoints — hoje a ordenação é client-side sobre a página carregada
+
+### Verificação
+
+- [x] `pnpm tsc --noEmit` e `pnpm lint` sem erros
+- [x] Rebuild do container `frontend` e telas validadas no browser
 
 ---
 

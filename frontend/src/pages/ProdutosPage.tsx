@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Pencil, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
+import { PageShell } from '@/components/ui/page-shell'
+import { Button } from '@/components/ui/button'
+import { DataTable, type Column } from '@/components/ui/data-table'
+import { StatusBadge } from '@/components/ui/badge'
+import { Modal } from '@/components/ui/modal'
+import { Field, inputClasses } from '@/components/ui/field'
 
 interface Categoria {
   id: string
@@ -61,7 +68,7 @@ export default function ProdutosPage() {
 
   async function carregarCategorias() {
     try {
-      const res = await api.get<{ items: Categoria[] }>('/categorias?limit=100')
+      const res = await api.get<{ items: Categoria[] }>('/api/v1/categorias?limit=100')
       setCategorias(res.items ?? [])
     } catch {
       // silencia erro de categorias — não bloqueia a listagem
@@ -72,7 +79,7 @@ export default function ProdutosPage() {
     setCarregando(true)
     setErro('')
     try {
-      let url = `/produtos?q=${encodeURIComponent(q)}&limit=${LIMITE}&offset=${off}`
+      let url = `/api/v1/produtos?q=${encodeURIComponent(q)}&limit=${LIMITE}&offset=${off}`
       if (cat) url += `&categoria_id=${encodeURIComponent(cat)}`
       const res = await api.get<{ items: Produto[] }>(url)
       setItens(res.items ?? [])
@@ -128,13 +135,13 @@ export default function ProdutosPage() {
     }
     try {
       if (editando) {
-        await api.put(`/produtos/${editando.id}`, payload)
+        await api.put(`/api/v1/produtos/${editando.id}`, payload)
       } else {
-        await api.post('/produtos', payload)
+        await api.post('/api/v1/produtos', payload)
       }
       setModalAberto(false)
-      carregar(busca, filtroCategoria, 0)
       setOffset(0)
+      carregar(busca, filtroCategoria, 0)
     } catch (err: unknown) {
       setErroModal(err instanceof Error ? err.message : 'Erro ao salvar')
     } finally {
@@ -152,270 +159,226 @@ export default function ProdutosPage() {
     return categorias.find(c => c.id === id)?.descricao ?? '—'
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
-          <button
-            onClick={abrirNovo}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
-          >
-            Novo Produto
-          </button>
+  const colunas: Column<Produto>[] = [
+    {
+      header: 'Descrição',
+      sortAccessor: (p) => p.descricao,
+      cell: (p) => (
+        <div>
+          <p className="font-medium text-gray-900">{p.descricao}</p>
+          {p.modelo && <p className="text-xs text-gray-400">{p.modelo}</p>}
         </div>
+      ),
+    },
+    { header: 'Categoria', sortAccessor: (p) => nomeCategoria(p.categoria_id), cell: (p) => <span className="text-gray-600">{nomeCategoria(p.categoria_id)}</span>, hideBelow: 'md' },
+    { header: 'Custo', align: 'right', hideBelow: 'sm', sortAccessor: (p) => p.preco_custo, cell: (p) => fmt(p.preco_custo) },
+    { header: 'Venda', align: 'right', sortAccessor: (p) => p.preco_venda, cell: (p) => fmt(p.preco_venda) },
+    { header: 'Margem', align: 'right', hideBelow: 'sm', sortAccessor: (p) => p.margem_pct, cell: (p) => <span className="text-green-600 font-medium">{p.margem_pct.toFixed(1)}%</span> },
+    {
+      header: 'Estoque',
+      align: 'right',
+      sortAccessor: (p) => p.estoque_atual,
+      cell: (p) => {
+        const abaixoMin = p.estoque_atual < p.estoque_minimo
+        return (
+          <span>
+            <span className={abaixoMin ? 'text-red-600 font-semibold' : 'text-gray-700'}>{p.estoque_atual}</span>
+            <span className="text-gray-400 text-xs"> / {p.estoque_minimo} mín</span>
+            {abaixoMin && <span className="ml-1 text-xs bg-red-100 text-red-700 px-1 rounded">⚠</span>}
+          </span>
+        )
+      },
+    },
+    {
+      header: 'Status',
+      align: 'center',
+      hideBelow: 'md',
+      sortAccessor: (p) => (p.ativo ? 1 : 0),
+      cell: (p) => <StatusBadge tone={p.ativo ? 'success' : 'neutral'}>{p.ativo ? 'Ativo' : 'Inativo'}</StatusBadge>,
+    },
+    {
+      header: '',
+      align: 'right',
+      cell: (p) => (
+        <button onClick={() => abrirEditar(p)} className="text-gray-400 hover:text-gray-700" title="Editar">
+          <Pencil className="w-4 h-4" />
+        </button>
+      ),
+    },
+  ]
 
-        <form onSubmit={pesquisar} className="flex gap-2 mb-4 flex-wrap">
-          <input
-            type="text"
-            placeholder="Pesquisar por descrição…"
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            className="flex-1 min-w-48 border border-gray-300 rounded-md px-3 py-2 text-sm"
-          />
-          <select
-            value={filtroCategoria}
-            onChange={e => setFiltroCategoria(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+  return (
+    <PageShell
+      title="Produtos"
+      subtitle="Catálogo de produtos"
+      maxWidth="max-w-6xl"
+      actions={
+        <Button onClick={abrirNovo}>
+          <Plus className="w-4 h-4" />
+          Novo Produto
+        </Button>
+      }
+    >
+      <form onSubmit={pesquisar} className="flex gap-2 flex-wrap">
+        <input
+          type="text"
+          placeholder="Pesquisar por descrição…"
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          className={inputClasses() + ' flex-1 min-w-48'}
+        />
+        <select
+          value={filtroCategoria}
+          onChange={e => setFiltroCategoria(e.target.value)}
+          className={inputClasses() + ' w-auto'}
+        >
+          <option value="">Todas as categorias</option>
+          {categorias.map(c => <option key={c.id} value={c.id}>{c.descricao}</option>)}
+        </select>
+        <Button type="submit" variant="secondary">Buscar</Button>
+      </form>
+
+      {erro && <p className="text-sm text-red-600">{erro}</p>}
+
+      <DataTable
+        columns={colunas}
+        rows={itens}
+        rowKey={(p) => p.id}
+        loading={carregando}
+        empty="Nenhum produto encontrado."
+      />
+
+      {(itens.length === LIMITE || offset > 0) && (
+        <div className="flex justify-between">
+          <Button
+            variant="secondary"
+            disabled={offset === 0}
+            onClick={() => { const off = Math.max(0, offset - LIMITE); setOffset(off); carregar(busca, filtroCategoria, off) }}
           >
-            <option value="">Todas as categorias</option>
-            {categorias.map(c => <option key={c.id} value={c.id}>{c.descricao}</option>)}
-          </select>
-          <button type="submit" className="bg-gray-200 px-4 py-2 rounded-md text-sm hover:bg-gray-300">
-            Buscar
-          </button>
-        </form>
-
-        {erro && <p className="text-red-600 text-sm mb-4">{erro}</p>}
-
-        {carregando ? (
-          <p className="text-gray-500 text-sm">Carregando…</p>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider text-xs">Descrição</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider text-xs">Categoria</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider text-xs">Custo</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider text-xs">Venda</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider text-xs">Margem</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider text-xs">Estoque</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-500 uppercase tracking-wider text-xs">Status</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider text-xs">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {itens.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-400 text-sm">
-                      Nenhum produto encontrado
-                    </td>
-                  </tr>
-                ) : (
-                  itens.map(p => {
-                    const abaixoMin = p.estoque_atual < p.estoque_minimo
-                    return (
-                      <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-900">
-                          <div className="font-medium">{p.descricao}</div>
-                          {p.modelo && <div className="text-xs text-gray-400">{p.modelo}</div>}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">{nomeCategoria(p.categoria_id)}</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{fmt(p.preco_custo)}</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{fmt(p.preco_venda)}</td>
-                        <td className="px-4 py-3 text-right text-green-600 font-medium">
-                          {p.margem_pct.toFixed(1)}%
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={abaixoMin ? 'text-red-600 font-semibold' : 'text-gray-700'}>
-                            {p.estoque_atual}
-                          </span>
-                          <span className="text-gray-400 text-xs"> / {p.estoque_minimo} mín</span>
-                          {abaixoMin && (
-                            <span className="ml-1 text-xs bg-red-100 text-red-700 px-1 rounded">⚠</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${p.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                            {p.ativo ? 'Ativo' : 'Inativo'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => abrirEditar(p)}
-                            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                          >
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {(itens.length === LIMITE || offset > 0) && (
-          <div className="flex justify-between mt-4">
-            <button
-              disabled={offset === 0}
-              onClick={() => { const off = Math.max(0, offset - LIMITE); setOffset(off); carregar(busca, filtroCategoria, off) }}
-              className="px-4 py-2 text-sm bg-white border rounded-md disabled:opacity-40"
-            >
-              Anterior
-            </button>
-            <button
-              disabled={itens.length < LIMITE}
-              onClick={() => { const off = offset + LIMITE; setOffset(off); carregar(busca, filtroCategoria, off) }}
-              className="px-4 py-2 text-sm bg-white border rounded-md disabled:opacity-40"
-            >
-              Próxima
-            </button>
-          </div>
-        )}
-      </div>
-
-      {modalAberto && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-              <h2 className="text-lg font-semibold">{editando ? 'Editar Produto' : 'Novo Produto'}</h2>
-              <button onClick={() => setModalAberto(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
-            </div>
-            <form onSubmit={salvar} className="p-6 space-y-4">
-              {erroModal && <p className="text-red-600 text-sm">{erroModal}</p>}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
-                <select
-                  value={form.categoria_id}
-                  onChange={e => setForm(f => ({ ...f, categoria_id: e.target.value }))}
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categorias.map(c => <option key={c.id} value={c.id}>{c.descricao}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
-                <input
-                  type="text"
-                  value={form.descricao}
-                  onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="Ex.: Capa iPhone 15 Pro"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preço de Custo (R$) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={form.preco_custo}
-                    onChange={e => setForm(f => ({ ...f, preco_custo: e.target.value }))}
-                    required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    placeholder="0,00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preço de Venda (R$) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={form.preco_venda}
-                    onChange={e => setForm(f => ({ ...f, preco_venda: e.target.value }))}
-                    required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    placeholder="0,00"
-                  />
-                </div>
-              </div>
-
-              {(parseFloat(form.preco_custo) > 0 || parseFloat(form.preco_venda) > 0) && (
-                <div className={`text-sm rounded-md px-3 py-2 ${margemCalculada > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  Margem: <strong>{margemCalculada.toFixed(2)}%</strong>
-                  {margemCalculada <= 0 && ' — preço de venda deve ser maior que o custo'}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estoque Mínimo</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.estoque_minimo}
-                    onChange={e => setForm(f => ({ ...f, estoque_minimo: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Garantia (meses)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.garantia_meses}
-                    onChange={e => setForm(f => ({ ...f, garantia_meses: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Modelo de Celular</label>
-                <input
-                  type="text"
-                  value={form.modelo}
-                  onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="Ex.: iPhone 15, Samsung S24"
-                />
-              </div>
-
-              {editando && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    checked={form.ativo}
-                    onChange={e => setForm(f => ({ ...f, ativo: e.target.checked }))}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600"
-                  />
-                  <label htmlFor="ativo" className="text-sm text-gray-700">Produto ativo</label>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalAberto(false)}
-                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {salvando ? 'Salvando…' : 'Salvar'}
-                </button>
-              </div>
-            </form>
-          </div>
+            Anterior
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={itens.length < LIMITE}
+            onClick={() => { const off = offset + LIMITE; setOffset(off); carregar(busca, filtroCategoria, off) }}
+          >
+            Próxima
+          </Button>
         </div>
       )}
-    </div>
+
+      {modalAberto && (
+        <Modal title={editando ? 'Editar Produto' : 'Novo Produto'} onClose={() => setModalAberto(false)} maxWidth="max-w-lg">
+          <form onSubmit={salvar} className="px-6 py-4 space-y-4">
+            {erroModal && <p className="text-sm text-red-600">{erroModal}</p>}
+
+            <Field label="Categoria *">
+              <select
+                value={form.categoria_id}
+                onChange={e => setForm(f => ({ ...f, categoria_id: e.target.value }))}
+                required
+                className={inputClasses()}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categorias.map(c => <option key={c.id} value={c.id}>{c.descricao}</option>)}
+              </select>
+            </Field>
+
+            <Field label="Descrição *">
+              <input
+                type="text"
+                value={form.descricao}
+                onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
+                required
+                className={inputClasses()}
+                placeholder="Ex.: Capa iPhone 15 Pro"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Preço de Custo (R$) *">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={form.preco_custo}
+                  onChange={e => setForm(f => ({ ...f, preco_custo: e.target.value }))}
+                  required
+                  className={inputClasses()}
+                  placeholder="0,00"
+                />
+              </Field>
+              <Field label="Preço de Venda (R$) *">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={form.preco_venda}
+                  onChange={e => setForm(f => ({ ...f, preco_venda: e.target.value }))}
+                  required
+                  className={inputClasses()}
+                  placeholder="0,00"
+                />
+              </Field>
+            </div>
+
+            {(parseFloat(form.preco_custo) > 0 || parseFloat(form.preco_venda) > 0) && (
+              <div className={`text-sm rounded-md px-3 py-2 ${margemCalculada > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                Margem: <strong>{margemCalculada.toFixed(2)}%</strong>
+                {margemCalculada <= 0 && ' — preço de venda deve ser maior que o custo'}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Estoque Mínimo">
+                <input
+                  type="number"
+                  min="0"
+                  value={form.estoque_minimo}
+                  onChange={e => setForm(f => ({ ...f, estoque_minimo: e.target.value }))}
+                  className={inputClasses()}
+                />
+              </Field>
+              <Field label="Garantia (meses)">
+                <input
+                  type="number"
+                  min="0"
+                  value={form.garantia_meses}
+                  onChange={e => setForm(f => ({ ...f, garantia_meses: e.target.value }))}
+                  className={inputClasses()}
+                />
+              </Field>
+            </div>
+
+            <Field label="Modelo de Celular">
+              <input
+                type="text"
+                value={form.modelo}
+                onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))}
+                className={inputClasses()}
+                placeholder="Ex.: iPhone 15, Samsung S24"
+              />
+            </Field>
+
+            {editando && (
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.ativo}
+                  onChange={e => setForm(f => ({ ...f, ativo: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                Produto ativo
+              </label>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="secondary" onClick={() => setModalAberto(false)}>Cancelar</Button>
+              <Button type="submit" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </PageShell>
   )
 }

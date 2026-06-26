@@ -36,15 +36,16 @@ Antes de adicionar um pacote, verifique:
 
 Se sim à (3), adicione — mas documente a decisão no commit.
 
-## Layout (a criar durante o build)
+## Layout
 
 ```
 frontend/
 ├── src/
-│   ├── components/        # Componentes da aplicação. Primitivos shadcn em components/ui/
-│   ├── lib/               # Helpers sem dependência de framework (http, api, auth, env)
-│   ├── pages/             # Componentes de nível de rota
-│   ├── App.tsx            # Router
+│   ├── components/
+│   │   └── ui/            # Kit de UI compartilhado (ver seção abaixo) + primitivos shadcn
+│   ├── lib/               # Helpers sem dependência de framework (http, api, auth, env, utils)
+│   ├── pages/             # Componentes de nível de rota (uma página por tela do dashboard)
+│   ├── App.tsx            # Router + PrivateRoute (guarda de sessão)
 │   ├── main.tsx
 │   └── index.css          # Diretivas Tailwind + tokens globais do tema
 ├── index.html
@@ -54,6 +55,34 @@ frontend/
 ```
 
 Manter imports consistentes com o alias `@/*` (ex.: `@/lib/api`, `@/components/ui/button`).
+
+## Kit de UI compartilhado (`@/components/ui`)
+
+Para manter **todas as telas com o mesmo padrão visual** (a divergência anterior
+nasceu de cada página reimplementar a própria casca), os primitivos abaixo são a
+fonte única de verdade. Páginas novas **devem** compô-los em vez de remontar
+cabeçalho/tabela/modal na mão.
+
+| Componente | Papel |
+|------------|-------|
+| `page-shell.tsx` → `PageShell` | Casca da página: barra de cabeçalho branca (botão voltar + título/subtítulo + `actions`) e `<main>` centralizado (`maxWidth` configurável). |
+| `button.tsx` → `Button` / `buttonClasses` | Botão padrão com variantes `primary` (cinza-900), `secondary`, `danger`, `success`. **Nunca** usar azul/índigo ad-hoc. `buttonClasses(...)` aplica o estilo a um `<Link>`. |
+| `data-table.tsx` → `DataTable<T>` | Tabela padrão (cartão branco, cabeçalho cinza, hover, estados de loading/vazio) com **ordenação por coluna** embutida. |
+| `badge.tsx` → `StatusBadge` | Selo de status com tons `success` / `neutral` / `warning` / `danger`. |
+| `modal.tsx` → `Modal` | Janela modal padrão (overlay + cabeçalho + botão fechar). |
+| `field.tsx` → `Field` / `inputClasses` | Rótulo de formulário e classe padrão de `input`/`select`/`textarea` (foco em cinza-900). |
+
+### Ordenação de tabelas
+
+`DataTable` ordena no cliente as linhas já carregadas. Uma coluna vira ordenável
+ao declarar `sortAccessor: (row) => valor` (string ordena com `localeCompare`
+pt-BR; número, numericamente; datas, por timestamp). O cabeçalho cicla
+**asc → desc → sem ordenação** ao clicar; colunas de ação (ícones) não recebem
+`sortAccessor`.
+
+> Em telas paginadas no servidor (clientes, produtos, categorias, estoque) a
+> ordenação atua sobre a **página atual**. Ordenação global exigiria parâmetros
+> `sort`/`order` nos endpoints — ainda não implementado.
 
 ## Estilo de código
 
@@ -77,6 +106,8 @@ Variável obrigatória:
 
 - Fala com o backend Go via JSON. A URL vem de `VITE_API_BASE_URL`.
 - Sempre use `api.get/post/put/patch/delete` de `@/lib/api` — ele trata base URL, JSON, injeção do Bearer token JWT, timeouts e `ApiError`s tipados.
+- **Todo path deve incluir o prefixo `/api/v1`** (ex.: `api.get('/api/v1/produtos')`). O `api` concatena `VITE_API_BASE_URL + path` sem inserir o prefixo. Omiti-lo gera 404 — cujo corpo sem envelope `{error:...}` aparece na UI como o genérico **"Erro desconhecido"**. (Foi exatamente o bug que escondia os dados em Categorias/Produtos/Vendas/Estoque/Relatórios.)
+- O login usa o campo **`senha`** (não `password`): `POST /api/v1/auth/login` com `{ email, senha }`.
 - Auth é JWT: o login chama `POST /api/v1/auth/login`, recebe `access_token` e `refresh_token`. O access token é armazenado em memória (não em `localStorage`) e injetado automaticamente pelo cliente `api`. Nunca passe tokens via props de componente.
 - Renove o access token via `POST /api/v1/auth/refresh` antes do vencimento (TTL padrão: 15 min).
 

@@ -21,8 +21,11 @@ Ordem de aplicação (em [`backend/migrations/`](../backend/migrations)):
 | 000007 | `vendas` | venda_master + detalhe_vendas (XOR cliente/consumidor) |
 | 000008 | `estoque` | movimentações (append-only) + ajustes (imutáveis) |
 | 000009 | `seed` | categorias exemplo, permissões, papel ADMIN, usuário admin |
+| 000010 | `seed_demo` | dados de demonstração **idempotentes** (UUIDs fixos + `ON CONFLICT DO NOTHING`): fornecedores, clientes, produtos com saldo, compras e vendas CONFIRMADA — povoam as telas do frontend no primeiro acesso |
 
-Cada arquivo possui o par `.down.sql` para rollback.
+Cada arquivo possui o par `.down.sql` para rollback. O `seed_demo` é seguro
+para reaplicar (não duplica) e seu `.down.sql` remove apenas os registros de
+demonstração (filtrando pelos prefixos de UUID fixos).
 
 ## Como inicializar
 
@@ -47,7 +50,7 @@ sobe depois das migrations.
 ```bash
 cd backend
 cp .env.example .env
-make migrate-up             # aplica 000001..000009
+make migrate-up             # aplica 000001..000010
 make run                    # sobe a API
 ```
 

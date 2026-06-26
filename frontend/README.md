@@ -50,10 +50,42 @@ src/
 │   ├── auth.ts       # armazenamento de tokens
 │   ├── env.ts        # variáveis de ambiente validadas
 │   └── utils.ts      # cn() (clsx + tailwind-merge)
-└── pages/
-    ├── LoginPage.tsx
-    └── DashboardPage.tsx
+├── components/
+│   └── ui/           # kit de UI compartilhado (casca, tabela, botão, modal…)
+│       ├── page-shell.tsx   # PageShell: cabeçalho + <main>
+│       ├── data-table.tsx   # DataTable<T>: tabela padrão com ordenação
+│       ├── button.tsx       # Button / buttonClasses (variantes)
+│       ├── badge.tsx        # StatusBadge (tons de status)
+│       ├── modal.tsx        # Modal (overlay + cabeçalho)
+│       └── field.tsx        # Field / inputClasses (formulários)
+└── pages/            # uma página por tela do dashboard
+    ├── LoginPage.tsx        DashboardPage.tsx
+    ├── ClientesPage.tsx     FornecedoresPage.tsx
+    ├── CategoriasPage.tsx   ProdutosPage.tsx
+    ├── ComprasPage.tsx      VendasPage.tsx / NovaVendaPage.tsx
+    ├── AjustesEstoquePage.tsx
+    └── RelatoriosPage.tsx
 ```
+
+## Kit de UI compartilhado
+
+Todas as telas internas seguem **um único padrão visual**, fornecido pelos
+primitivos em `@/components/ui`. Ao criar uma página nova, componha-os em vez de
+remontar cabeçalho/tabela/modal — foi a falta dessa camada que fez as telas
+divergirem (azul/índigo, larguras e tabelas diferentes).
+
+- **`PageShell`** — casca: barra branca com voltar + título/subtítulo + `actions`
+  e `<main>` centralizado.
+- **`Button` / `buttonClasses`** — variantes `primary` (cinza-900), `secondary`,
+  `danger`, `success`. Não introduza azul/índigo ad-hoc.
+- **`DataTable<T>`** — tabela padrão com **ordenação por coluna**: declare
+  `sortAccessor: (row) => valor` na coluna; o cabeçalho cicla asc → desc → sem
+  ordenação. Ordena as linhas já carregadas (na página atual, em telas paginadas).
+- **`StatusBadge`**, **`Modal`**, **`Field` / `inputClasses`** — selo de status,
+  janela modal e helpers de formulário.
+
+> **Chamadas à API sempre com o prefixo `/api/v1`** (ex.: `api.get('/api/v1/produtos')`).
+> Sem ele a chamada cai em 404 e a UI mostra o genérico "Erro desconhecido".
 
 ## Convenções
 

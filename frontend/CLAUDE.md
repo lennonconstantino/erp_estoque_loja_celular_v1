@@ -22,6 +22,7 @@ Não há suíte de testes configurada. `pnpm build` é o portão de qualidade: e
 
 - Alias `@` → `src/` (definido em `vite.config.ts` e `tsconfig.json`). Importe sempre via `@/...`, não com caminhos relativos profundos.
 - **shadcn/ui** configurado em `components.json`: componentes vão em `@/components/ui`, estilo `default`, base `slate`, ícones `lucide`. Adicione componentes com o CLI do shadcn, não à mão.
+- **Kit de UI compartilhado** em `@/components/ui` é a fonte única do padrão visual: `PageShell` (casca), `DataTable<T>` (tabela com ordenação por `sortAccessor`), `Button`/`buttonClasses` (variantes; sem azul/índigo ad-hoc), `StatusBadge`, `Modal`, `Field`/`inputClasses`. Páginas novas **compõem** esses primitivos em vez de remontar cabeçalho/tabela/modal na mão — foi a ausência dessa camada que fez as telas divergirem.
 - `cn()` em `@/lib/utils` (clsx + tailwind-merge) é o helper padrão para compor classes.
 - Variáveis de ambiente passam por `@/lib/env` via `required(...)` — adicione novas lá (prefixo `VITE_`) em vez de ler `import.meta.env` direto. Obrigatória: `VITE_API_BASE_URL`.
 
@@ -35,7 +36,7 @@ Three camadas, use sempre a de cima:
 
 Implicação para rotas protegidas: `PrivateRoute` (em `App.tsx`) considera autenticado quem tem access token **ou** refresh token — porque após reload só o refresh existe e o access é obtido na primeira chamada via 401→refresh.
 
-O backend expõe tudo sob `/api/v1`; endpoints retornam erros no formato `{"error":{"code","message"}}` e listas como `{"items":[...]}`.
+O backend expõe tudo sob `/api/v1`; endpoints retornam erros no formato `{"error":{"code","message"}}` e listas como `{"items":[...]}`. **Inclua sempre o prefixo `/api/v1` no path** passado ao `api` — ele só concatena `VITE_API_BASE_URL + path`. Omitir o prefixo gera 404, e como a resposta não traz o envelope `{error:...}`, a UI exibe o genérico **"Erro desconhecido"**. O login usa o campo `senha` (não `password`).
 
 ## Deploy
 
