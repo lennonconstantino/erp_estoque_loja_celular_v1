@@ -5,6 +5,11 @@
 - **PostgreSQL 16**, acesso via `pgx/v5`.
 - Migrations versionadas com **golang-migrate** (arquivos `.sql` em pares
   `*.up.sql` / `*.down.sql`).
+- Dois caminhos de execução, **os mesmos arquivos**: o `migrate/migrate` CLI
+  (alvos `make migrate-*` e serviço `migrate` do docker-compose) em dev, e um
+  **runner Go embarcado** ([`backend/cmd/migrate`](../../backend/cmd/migrate),
+  golang-migrate como biblioteca) para produção — é o binário `/app/migrate` da
+  imagem do backend, rodado no pre-deploy do Railway.
 
 ## Arquivos de migration
 
@@ -25,7 +30,10 @@ Ordem de aplicação (em [`backend/migrations/`](../backend/migrations)):
 
 Cada arquivo possui o par `.down.sql` para rollback. O `seed_demo` é seguro
 para reaplicar (não duplica) e seu `.down.sql` remove apenas os registros de
-demonstração (filtrando pelos prefixos de UUID fixos).
+demonstração (filtrando pelos prefixos de UUID fixos). Como o ledger
+`estoque.movimentacoes` é imutável por trigger, o `.down.sql` desabilita o
+trigger pelo owner (`ALTER TABLE … DISABLE/ENABLE TRIGGER`) apenas durante o
+`DELETE` dos registros de demonstração.
 
 ## Como inicializar
 
@@ -62,6 +70,24 @@ make migrate-down           # reverte a última
 make migrate-create name=add_campo_x   # gera novo par .sql
 make reset                  # drop total + up (recria do zero)
 ```
+
+### Banco remoto (Supabase) com o runner embarcado
+
+Para provisionar um Postgres gerenciado do zero (schemas + seed + dados de
+demonstração), use o runner Go via script — ele resolve a URL de
+`backend/.env.production`, confirma o alvo e verifica o resultado:
+
+```bash
+make supabase-setup                 # usa backend/.env.production
+make supabase-setup ARGS="-y"       # sem confirmação
+scripts/supabase-setup.sh "<DATABASE_URL>"   # mira uma URL explícita
+```
+
+Precedência da URL: **argumento explícito → `backend/.env.production` → `$DATABASE_URL`**
+(o `.env.production` vem antes do ambiente de propósito, já que o `make` exporta o
+`DATABASE_URL` local). O comando equivalente embarcado é `/app/migrate up`
+(também aceita `down`, `version`, `force`). Detalhes do deploy em
+[Deploy no Railway](railway-deployment.md) e [Configuração do Supabase](supabase-setup.md).
 
 ## Estratégia de isolamento no banco
 

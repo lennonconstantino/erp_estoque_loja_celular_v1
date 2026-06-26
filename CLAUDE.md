@@ -68,7 +68,7 @@ Cada domínio é um pacote em `backend/internal/modules/<dominio>/` com camadas 
 - `adapters/outbound/postgres/` — implementação do repositório; `adapters/outbound/cep/` etc. — gateways externos.
 - `module.go` — **composition root / DI** do contexto: o único lugar que conhece as implementações concretas, monta tudo e expõe `Router()`. Para adicionar um módulo: implemente as camadas, exponha `New(...)` em `module.go`, e monte em [cmd/api/main.go](backend/cmd/api/main.go) sob `/api/v1` (há exemplos comentados lá).
 
-> Estado atual: **todos os bounded contexts estão implementados em Go** (`iam`, `clientes`, `fornecedores`, `catalogo`, `estoque`, `compras`, `vendas`, `relatorios`), seguindo este molde. O frontend cobre todas as telas e compartilha o kit de UI em `@/components/ui`. Resta a Fase 9 (deploy) — ver [docs/todos.md](docs/todos.md).
+> Estado atual: **todos os bounded contexts estão implementados em Go** (`iam`, `clientes`, `fornecedores`, `catalogo`, `estoque`, `compras`, `vendas`, `relatorios`), seguindo este molde. O frontend cobre todas as telas e compartilha o kit de UI em `@/components/ui`. A Fase 9 (deploy) está **preparada e configurada** — runner `cmd/migrate`, `railway.json` por serviço, Dockerfiles, `.env.production.example` e `scripts/supabase-setup.sh` — faltando apenas executar o deploy contra os provedores. Ver [docs/todos.md](docs/todos.md) e [docs/setup/railway-deployment.md](docs/setup/railway-deployment.md).
 
 ### Platform (infra compartilhada — `backend/internal/platform/`)
 

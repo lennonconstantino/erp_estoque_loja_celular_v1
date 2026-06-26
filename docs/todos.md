@@ -218,11 +218,30 @@ resta a Fase 9 — deploy).
 
 ## Fase 9 — Deploy (Railway + Supabase)
 
+> **Estado:** tudo **configurado e pronto para subir**. Os artefatos de deploy estão
+> commitados e validados localmente; faltam apenas as ações que rodam contra os
+> provedores (criar projetos, setar variáveis e dar deploy), executadas quando for
+> efetivamente subir. Passo a passo em [docs/setup/railway-deployment.md](setup/railway-deployment.md).
+
+### Preparação no repositório (pronto)
+
+- [x] Runner de migrations `cmd/migrate` (golang-migrate embarcado; `up`/`down`/`version`/`force`)
+- [x] Backend lê `PORT` do Railway (fallback `APP_PORT` → `8080`)
+- [x] `backend/Dockerfile` compila e copia `/app/api` **e** `/app/migrate` (+ `migrations/`)
+- [x] `frontend/nginx.conf` com `GET /health` para o healthcheck
+- [x] `backend/railway.json` e `frontend/railway.json` (builder Dockerfile, healthcheck, pre-deploy `/app/migrate up`)
+- [x] Templates `backend/.env.production.example` e `frontend/.env.production.example` (Supabase + CORS + JWT)
+- [x] `.gitignore` cobre `.segredo`, `.env` e `.env.*` (mantendo os `*.example`)
+- [x] Validação local: build dos dois binários, imagem Docker do backend, ciclo `up`/`down`/`up` num Postgres limpo
+- [x] Fix: `000010_seed_demo.down.sql` agora reverte o ledger (DISABLE/ENABLE trigger pelo owner)
+
+### Execução do deploy (rodar ao subir — fora do escopo "não subir agora")
+
 - [ ] Criar projeto no Supabase; obter `DATABASE_URL` (porta 5432, `sslmode=require`)
 - [ ] Criar projeto no Railway com dois serviços: `erp-estoque-backend` e `erp-estoque-frontend`
 - [ ] Configurar variáveis de ambiente no Railway para o backend (`DATABASE_URL`, `JWT_SECRET`, `ALLOWED_ORIGINS`, etc.)
 - [ ] Configurar variável `VITE_API_BASE_URL` no serviço de frontend **antes** do primeiro build
-- [ ] Definir pre-deploy command do backend: `/app/migrate up`
+- [ ] Pre-deploy command do backend já vem de `railway.json` (`/app/migrate up`) — só confirmar
 - [ ] Fazer deploy; verificar `/health` do backend
 - [ ] Verificar migrations aplicadas no Supabase (tables nos schemas corretos)
 - [ ] Testar ciclo completo em produção: login → compra → venda → ajuste → relatório

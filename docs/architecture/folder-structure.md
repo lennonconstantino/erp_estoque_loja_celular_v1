@@ -9,8 +9,8 @@
 │   ├── cmd/
 │   │   ├── api/              # entrypoint do monólito modular (HTTP)
 │   │   │   └── main.go
-│   │   └── migrate/          # runner de migrations (opcional p/ embed)
-│   │       └── main.go
+│   │   └── migrate/          # runner de migrations (golang-migrate embarcado)
+│   │       └── main.go       #   binário /app/migrate — pre-deploy do Railway e scripts/supabase-setup.sh
 │   ├── internal/
 │   │   ├── platform/         # infraestrutura COMPARTILHADA (sem regra de negócio)
 │   │   │   ├── config/       #   carregamento de .env / env vars

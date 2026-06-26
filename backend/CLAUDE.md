@@ -58,7 +58,7 @@ Adaptadores outbound que chamam **APIs externas** devem embrulhar a chamada em u
 
 **1 schema Postgres por bounded context**, **sem foreign keys entre schemas** — integridade referencial cross-context é responsabilidade da aplicação (futuro: eventos/sagas). Repositórios falam apenas com seu próprio schema (`clientes.clientes`, etc.) e mapeiam colunas `*_<sufixo>` (ex.: `id_cli`, `nome_cli`) ↔ campos da entidade.
 
-Migrations em `migrations/`, pares `NNNNNN_nome.up.sql`/`.down.sql` (golang-migrate, sequenciais). `000001_init` cria extensões + schemas + `set_updated_at()`; `000009_seed` popula dados iniciais (login `admin@loja.local`/`admin123`). Toda mudança de schema é uma nova migration — nunca edite uma já aplicada.
+Migrations em `migrations/`, pares `NNNNNN_nome.up.sql`/`.down.sql` (golang-migrate, sequenciais). `000001_init` cria extensões + schemas + `set_updated_at()`; `000009_seed` popula dados iniciais (login `admin@loja.local`/`admin123`); `000010_seed_demo` adiciona dados de demonstração idempotentes. Toda mudança de schema é uma nova migration — nunca edite uma já aplicada. Em dev use os alvos `make migrate-*` (CLI `migrate/migrate`); em produção, o runner Go embarcado `cmd/migrate` roda os mesmos arquivos como `/app/migrate up` (pre-deploy do Railway) e via `scripts/supabase-setup.sh`.
 
 ## Config
 

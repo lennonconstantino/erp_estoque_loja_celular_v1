@@ -54,6 +54,7 @@ Login inicial (seed): `admin@loja.local` / `admin123` — **troque em produção
 | `make migrate-down` | reverte a última migration |
 | `make migrate-create name=add_xyz` | cria um par `.up.sql`/`.down.sql` |
 | `make reset` | DROP total + migrate-up + seed |
+| `make supabase-setup` | cria + popula um banco remoto (Supabase) via `cmd/migrate` — usa `backend/.env.production` |
 
 Para rodar um pacote ou um único teste, chame `go test` direto em `backend/`:
 
@@ -153,7 +154,8 @@ Veja `.env.example`. Principais:
 | Variável | Default (dev) | Descrição |
 |----------|---------------|-----------|
 | `APP_ENV` | `development` | ambiente |
-| `APP_PORT` | `8080` | porta HTTP |
+| `PORT` | — | porta HTTP injetada pela plataforma (Railway); tem precedência sobre `APP_PORT` |
+| `APP_PORT` | `8080` | porta HTTP local (usada quando `PORT` não está definida) |
 | `DATABASE_URL` | `postgres://erp:erp_secret@localhost:5432/erp_estoque?sslmode=disable` | conexão Postgres |
 | `JWT_SECRET` | `troque-este-segredo-em-producao` | segredo HS256 |
 | `JWT_ACCESS_TTL` | `15m` | validade do access token |
@@ -161,9 +163,11 @@ Veja `.env.example`. Principais:
 
 ## Build com Docker
 
-`Dockerfile` multi-stage: imagem de build `golang:1.25-alpine` compila um binário
-estático (`CGO_ENABLED=0`) e o serve numa imagem `alpine` enxuta, copiando junto a
-pasta `migrations/`.
+`Dockerfile` multi-stage: imagem de build `golang:1.25-alpine` compila dois binários
+estáticos (`CGO_ENABLED=0`) — `cmd/api` (`/app/api`) e `cmd/migrate` (`/app/migrate`) —
+e os serve numa imagem `alpine` enxuta, copiando junto a pasta `migrations/`. O
+`/app/migrate up` é o comando de pre-deploy no Railway (ver `railway.json`); o deploy
+em si está em [`../docs/setup/railway-deployment.md`](../docs/setup/railway-deployment.md).
 
 Mais detalhes em [`../docs/`](../docs/README.md) e nas convenções para o Claude
 em [`CLAUDE.md`](CLAUDE.md).

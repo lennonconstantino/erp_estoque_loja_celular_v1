@@ -355,7 +355,10 @@ passo em [setup/railway-deployment.md](setup/railway-deployment.md).
 9. Adaptadores de saída: `CepGateway` (ViaCEP) e `FiscalGateway` (cupom/NF).
 10. Relatórios (listagens, abaixo do mínimo, mais/menos vendidos).
 11. Telas do frontend por módulo + tratamento de erros e estados vazios.
-12. Dockerfiles do frontend e do `cmd/migrate`; deploy no Railway.
+12. Empacotamento de deploy: Dockerfile do frontend (nginx + `/health`), binário
+    `cmd/migrate` embarcado na imagem do backend, `railway.json` por serviço
+    (pre-deploy `/app/migrate up`, healthcheck) e `scripts/supabase-setup.sh`
+    para provisionar o banco gerenciado. Deploy no Railway + Supabase.
 
 ## Não-objetivos
 

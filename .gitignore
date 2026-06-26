@@ -24,8 +24,16 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
+# env files (segredos reais ficam fora do versionamento; os *.example entram)
 .env
+.env.*
+!.env*.example
+
+# segredos de provedores (Supabase/Railway) — nunca versionar
+.segredo
+
+# binário do runner de migrations gerado pelo scripts/supabase-setup.sh
+backend/bin/migrate
 
 # Editor/IDE
 # .idea/

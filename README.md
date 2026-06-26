@@ -238,9 +238,15 @@ make migrate-up                    # aplica todas as migrations
 make migrate-down                  # reverte a última migration
 make migrate-create name=add_xyz   # cria nova migration
 make reset                         # DROP total + recria (inclui seed)
+make supabase-setup                # cria + popula um banco remoto (Supabase) — usa backend/.env.production
 ```
 
 > O seed roda pelo fluxo `reset`/`migrate-up` (a migration `000009_seed` popula os dados iniciais). Não há alvo `seed` standalone.
+>
+> Os alvos `migrate-*` usam o `migrate/migrate` CLI local. Para **produção** há um
+> runner Go embarcado em [`backend/cmd/migrate`](backend/cmd/migrate) (mesmos arquivos
+> `migrations/*.sql`): é o binário `/app/migrate` da imagem do backend, executado no
+> pre-deploy do Railway (`/app/migrate up`) e usado pelo [`scripts/supabase-setup.sh`](scripts/supabase-setup.sh).
 
 ### Agregados
 
@@ -303,8 +309,10 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 ├── docker-compose.observability.yml    # stack opcional: Prometheus + Grafana
 ├── Makefile                            # orquestra backend, frontend e infra (make help)
 ├── scripts/docker/teardown.sh          # limpa todos os recursos Docker do projeto
+├── scripts/supabase-setup.sh           # cria + popula um Postgres remoto (Supabase) via cmd/migrate
 ├── backend/                # serviço Go (hexagonal) — ver backend/CLAUDE.md
 │   ├── cmd/api/            # entrypoint da API (main.go monta os módulos em /api/v1)
+│   ├── cmd/migrate/        # runner de migrations embarcado (/app/migrate up no Railway)
 │   ├── internal/
 │   │   ├── platform/       # infra compartilhada
 │   │   │   ├── auth/       # JWT HS256 + RBAC
@@ -319,8 +327,8 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 │   │           ├── application/
 │   │           ├── adapters/        # inbound/http · outbound/postgres · outbound/cep
 │   │           └── module.go        # composition root / DI
-│   ├── migrations/         # DDL versionada (golang-migrate, 000001–000009)
-│   ├── Dockerfile · .env.example
+│   ├── migrations/         # DDL versionada (golang-migrate, 000001–000010)
+│   ├── Dockerfile · railway.json · .env.example · .env.production.example
 │   └── go.mod
 ├── frontend/               # SPA React/Vite (pnpm) — ver frontend/CLAUDE.md
 │   ├── src/

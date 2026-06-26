@@ -3,7 +3,7 @@
 O repositório sobe no Railway como dois serviços dentro de um único projeto:
 
 - `erp-estoque-backend` — servidor Go (chi), construído via `backend/Dockerfile`.
-- `erp-estoque-frontend` — build estático Vite servido por Nginx, construído via `frontend/Dockerfile` (a criar).
+- `erp-estoque-frontend` — build estático Vite servido por Nginx, construído via `frontend/Dockerfile`.
 
 O PostgreSQL fica hospedado no Supabase. Não adicione um Railway Postgres para este projeto.
 
@@ -15,66 +15,38 @@ Tenha em mãos:
 - Um projeto Supabase configurado — veja [Supabase setup](supabase-setup.md).
 - A connection string direta do Supabase (`sslmode=require`, porta 5432).
 
-## Dockerfile do frontend (ainda não existe)
+## O que já vem pronto no repositório
 
-Antes de fazer o deploy do frontend, crie `frontend/Dockerfile`:
+A Fase 9 deixou a infraestrutura de deploy commitada — não há nada de Dockerfile/config a
+criar na mão:
 
-```dockerfile
-# ---- build ----
-FROM node:20-alpine AS build
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile
-COPY . .
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-RUN pnpm build
+- **`backend/Dockerfile`** compila dois binários no build stage e os copia para o runtime:
+  `/app/api` (servidor) e `/app/migrate` (runner de migrations). A pasta `migrations/` também
+  é copiada.
+- **`frontend/Dockerfile` + `frontend/nginx.conf`** fazem o build estático do Vite e servem por
+  nginx com SPA fallback para `/index.html` e um endpoint `GET /health` (texto `ok`) para o
+  healthcheck.
+- **`backend/railway.json`** e **`frontend/railway.json`** declaram builder Dockerfile,
+  `healthcheckPath: /health` e — no backend — o `preDeployCommand: /app/migrate up`. Com os
+  Root Directories corretos (`backend`/`frontend`), o Railway lê esses arquivos e aplica
+  pre-deploy/healthcheck automaticamente, sem configuração manual no painel.
+- **Templates de variáveis**: `backend/.env.production.example` e `frontend/.env.production.example`
+  listam exatamente o que preencher nas Variables de cada serviço.
 
-# ---- runtime ----
-FROM nginx:1.27-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-```
-
-E crie `frontend/nginx.conf` para o SPA (redirecionar 404 para `index.html`):
-
-```nginx
-server {
-    listen 80;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    location /health {
-        return 200 "ok";
-        add_header Content-Type text/plain;
-    }
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
+> O backend lê a porta de `PORT` (injetada pelo Railway), com fallback para `APP_PORT` e
+> depois `8080`. Não defina `PORT`/`APP_PORT` manualmente no Railway.
 
 ## Migrations no Railway
 
-O backend precisa das migrations aplicadas antes de subir. O `Dockerfile` do backend já copia a pasta `migrations/`. Para expor o runner de migrations como binário separado, ajuste o `backend/Dockerfile` para também compilar `cmd/migrate`:
-
-```dockerfile
-# adicionar no stage build, após compilar a api:
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/migrate ./cmd/migrate
-# e no stage runtime:
-COPY --from=build /out/migrate /app/migrate
-```
-
-Com isso, o comando de pre-deploy no Railway será:
+O binário `/app/migrate` (golang-migrate embarcado, mesmos arquivos `migrations/*.sql` do
+docker-compose) já está na imagem do backend e é executado pelo `preDeployCommand` declarado em
+`backend/railway.json`:
 
 ```bash
 /app/migrate up
 ```
 
-Se preferir não alterar o Dockerfile agora, rode as migrations manualmente via CLI antes do primeiro deploy (veja opção B, passo 6).
+Comandos disponíveis: `up`, `down [n]`, `version`, `force <v>`. Em produção use sempre `up`.
 
 ## Opção A: Railway UI
 

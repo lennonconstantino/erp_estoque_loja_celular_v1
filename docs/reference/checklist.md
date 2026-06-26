@@ -213,11 +213,13 @@ serviço (HMAC) antes de processar.
 Marque antes de cada deploy:
 
 - [ ] Nenhum segredo tem prefixo `VITE_` (nada sensível embarcado no bundle do frontend)
-- [ ] `.env` está no `.gitignore` ✅
-- [ ] Existe `.env.example` com a estrutura, sem valores reais ✅
+- [ ] `.env`, `.env.*` (exceto `*.example`) e `.segredo` estão no `.gitignore` ✅
+- [ ] Existem `.env.example` e `.env.production.example` (backend e frontend) com a estrutura, sem valores reais ✅
 - [ ] `docker-compose.yml` **não** tem senhas hardcoded (usa `${VAR}` interpolado) ✅
 - [ ] `.env.example`, scripts e docs usam placeholders, não valores que pareçam segredo
-- [ ] `JWT_SECRET` e `DB_PASSWORD` reais existem só em `backend/.env` local ou no secret manager do ambiente
+- [ ] `JWT_SECRET`/`DB_PASSWORD` reais existem só em `backend/.env`(local) ou `backend/.env.production` (gitignorado) / secret manager do Railway — nunca versionados
+- [ ] `JWT_SECRET` de produção é único e longo (≠ default de dev `__INSECURE_DEV_JWT_SECRET__`)
+- [ ] `DATABASE_URL` de produção usa a conexão **direta** do Supabase (porta 5432, `sslmode=require`)
 - [ ] Seed `admin@loja.local` / `admin123` desativado ou com senha trocada em produção
 - [ ] Toda rota de negócio verifica autenticação (`Authenticate`) ✅
 - [ ] Toda rota de negócio verifica autorização (`RequirePerm("recurso:acao")`) ✅

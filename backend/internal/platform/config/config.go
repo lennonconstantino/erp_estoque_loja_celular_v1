@@ -35,7 +35,9 @@ func Load() *Config {
 
 	return &Config{
 		AppEnv:       getenv("APP_ENV", "development"),
-		AppPort:      getenv("APP_PORT", "8080"),
+		// PORT é injetado por plataformas como o Railway e tem precedência;
+		// APP_PORT é o override local; 8080 é o fallback de desenvolvimento.
+		AppPort:      getenv("PORT", getenv("APP_PORT", "8080")),
 		DatabaseURL:  getenv("DATABASE_URL", "postgres://erp@localhost:5432/erp_estoque?sslmode=disable"),
 		JWTSecret:     getenv("JWT_SECRET", "__INSECURE_DEV_JWT_SECRET__"),
 		JWTAccessTTL:  getdur("JWT_ACCESS_TTL", 15*time.Minute),

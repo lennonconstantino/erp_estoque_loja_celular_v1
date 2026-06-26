@@ -13,7 +13,7 @@ INSECURE_DB  := __INSECURE_DEV_DB_PASSWORD__
 .PHONY: help \
 	up down logs check-secrets \
 	be-build be-run be-test be-vet be-fmt \
-	migrate-up migrate-down migrate-create seed reset \
+	migrate-up migrate-down migrate-create seed reset supabase-setup \
 	fe-install fe-dev fe-build fe-lint \
 	build test lint
 
@@ -77,6 +77,9 @@ migrate-create: ## make migrate-create name=add_xyz
 reset:         ## DROP total + recria (inclui seed)
 	$(MIGRATE) drop -f
 	$(MIGRATE) up
+
+supabase-setup: ## cria + popula o banco no Supabase (usa backend/.env.production; passe ARGS="-y" p/ pular confirmação)
+	./scripts/supabase-setup.sh $(ARGS)
 
 ## ---- Frontend (React/Vite) --------------------------------------------
 fe-install:    ## instala dependências (pnpm)

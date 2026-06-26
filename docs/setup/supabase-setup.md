@@ -68,6 +68,22 @@ make migrate-down                      # reverte a última
 make reset                             # drop total + up (recria do zero)
 ```
 
+### Criar e popular o Supabase com um comando
+
+Para provisionar o banco do Supabase do zero (criar schemas/tabelas **e** popular
+admin + dados de demonstração), use o script guardado — ele resolve a URL de
+`backend/.env.production`, pede confirmação e verifica o resultado:
+
+```bash
+make supabase-setup                    # usa backend/.env.production
+make supabase-setup ARGS="-y"          # sem confirmação interativa
+# ou direto, com uma URL explícita:
+scripts/supabase-setup.sh "postgres://postgres:SENHA@db.<ref>.supabase.co:5432/postgres?sslmode=require"
+```
+
+O script é idempotente (rodar de novo num banco já migrado é no-op) e usa o mesmo
+runner `cmd/migrate` do pre-deploy do Railway.
+
 > **Schemas:** `iam`, `clientes`, `fornecedores`, `catalogo`, `compras`, `vendas`, `estoque`. Não há foreign keys físicas entre schemas — referências externas usam UUID solto. Veja o modelo completo em [Modelo de Dados](../reference/data-model.md).
 
 ## 6. Autenticação — o que o Supabase Auth NÃO faz aqui
