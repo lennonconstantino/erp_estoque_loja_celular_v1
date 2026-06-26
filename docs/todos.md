@@ -105,21 +105,21 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/estoque/domain/` — entidades `Movimentacao` (append-only), `Ajuste`, tipos `COMPRA/VENDA/AJUSTE_ENTRADA/AJUSTE_SAIDA`
-- [ ] Criar `ports/inbound.go` — `EstoqueService` (RegistrarMovimentacao, LancarAjuste, ConsultarSaldo)
-- [ ] Criar `ports/outbound.go` — `MovimentacaoRepository`, `AjusteRepository`, `CatalogoWriter` (atualiza `estoque_a_pro` + `disp_pro`)
-- [ ] Criar `application/service.go` — lógica de ajuste append-only, atualização de saldo via `CatalogoWriter`
-- [ ] Criar `adapters/outbound/postgres/movimentacao_repo.go` + `ajuste_repo.go`
-- [ ] Criar `adapters/inbound/http/handler.go` + `router.go` — `POST /estoque/ajustes` (RBAC: `estoque:write`); `GET /estoque/{produtoId}` (RBAC: `estoque:read`)
-- [ ] Criar `module.go` e montar em `main.go`; injetar `CatalogoWriter` do módulo catálogo
-- [ ] Verificar trigger no banco que bloqueia UPDATE/DELETE em `estoque.ajustes` e `estoque.movimentacoes`
-- [ ] Testar: ajuste registra `saldo_ant`/`saldo_atu`; tentativa de editar ajuste retorna erro
+- [x] Criar `internal/modules/estoque/domain/` — entidades `Movimentacao` (append-only), `Ajuste`, tipos `COMPRA/VENDA/AJUSTE_ENTRADA/AJUSTE_SAIDA`
+- [x] Criar `ports/inbound.go` — `EstoqueService` (LancarAjuste, ConsultarMovimentacoes, ConsultarAjustes)
+- [x] Criar `ports/outbound.go` — `MovimentacaoRepository`, `AjusteRepository`, `CatalogoWriter` (atualiza `estoque_a_pro` + `disp_pro`)
+- [x] Criar `application/service.go` — lógica de ajuste append-only, atualização de saldo via `CatalogoWriter`
+- [x] Criar `adapters/outbound/postgres/movimentacao_repo.go` + `ajuste_repo.go`
+- [x] Criar `adapters/inbound/http/handler.go` + `router.go` — `POST /estoque/ajustes` (RBAC: `estoque:write`); `GET /estoque/{produtoId}` (RBAC: `estoque:read`)
+- [x] Criar `module.go` e montar em `main.go`; injetar `CatalogoWriter` do módulo catálogo
+- [x] Verificar trigger no banco que bloqueia UPDATE/DELETE em `estoque.ajustes` e `estoque.movimentacoes`
+- [x] Testar: ajuste registra `saldo_ant`/`saldo_atu`; tentativa de editar ajuste retorna erro
 
 ### Frontend
 
-- [ ] Criar `pages/AjustesEstoquePage.tsx` — formulário de ajuste (produto, quantidade, motivo, tipo entrada/saída)
-- [ ] Exibir histórico de ajustes (somente leitura, sem botão de editar/excluir)
-- [ ] Integrar com API (`POST /estoque/ajustes`, `GET /estoque/{produtoId}`)
+- [x] Criar `pages/AjustesEstoquePage.tsx` — formulário de ajuste (produto, quantidade, motivo, tipo entrada/saída)
+- [x] Exibir histórico de ajustes (somente leitura, sem botão de editar/excluir)
+- [x] Integrar com API (`POST /estoque/ajustes`, `GET /estoque/{produtoId}`)
 
 ---
 

@@ -16,6 +16,7 @@ import (
 
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/catalogo"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/clientes"
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/estoque"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/fornecedores"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/iam"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/auth"
@@ -60,6 +61,7 @@ func main() {
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
 	fornecedoresMod := fornecedores.New(pool, authMgr, cfg.CepAPIURL)
 	catalogoMod := catalogo.New(pool, authMgr)
+	estoqueMod  := estoque.New(pool, authMgr, catalogoMod.Writer())
 
 	r := httpserver.NewRouter()
 	r.Handle("/metrics", obs.MetricsHandler)
@@ -69,6 +71,7 @@ func main() {
 		api.Mount("/fornecedores", fornecedoresMod.Router())
 		api.Mount("/categorias", catalogoMod.CategoriasRouter())
 		api.Mount("/produtos", catalogoMod.ProdutosRouter())
+		api.Mount("/estoque", estoqueMod.Router())
 		// ... demais módulos
 	})
 
