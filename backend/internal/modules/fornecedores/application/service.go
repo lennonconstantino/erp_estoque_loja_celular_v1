@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -111,6 +112,12 @@ func (s *Service) Listar(ctx context.Context, q string, limit, offset int) ([]do
 
 func (s *Service) ConsultarCEP(ctx context.Context, cep string) (domain.Endereco, error) {
 	return s.cep.Lookup(ctx, domain.NormalizarDigitos(cep))
+}
+
+// AtualizarUltimaCompra registra a data da última compra realizada com este fornecedor.
+// Consumido pelo módulo compras via porta FornecedorWriter (duck typing).
+func (s *Service) AtualizarUltimaCompra(ctx context.Context, id uuid.UUID, data time.Time) error {
+	return s.repo.AtualizarUltimaCompra(ctx, id, data)
 }
 
 // completarEndereco preenche rua/bairro/cidade/UF via CEP (best-effort).

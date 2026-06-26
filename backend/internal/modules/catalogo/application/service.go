@@ -26,7 +26,7 @@ func NewService(cats ports.CategoriaRepository, prods ports.ProdutoRepository) *
 // Conformidade em tempo de compilação.
 var _ ports.CategoriaService = (*Service)(nil)
 var _ ports.ProdutoService   = (*Service)(nil)
-var _ ports.CatalogoReader   = (*Service)(nil)
+var _ ports.CatalogoReader   = (*Service)(nil) // inclui ExisteProduto
 var _ ports.CatalogoWriter   = (*Service)(nil)
 
 // ─── CategoriaService ────────────────────────────────────────────────────────
@@ -140,6 +140,15 @@ func (s *Service) ListarProdutos(ctx context.Context, q string, categoriaID *uui
 
 func (s *Service) BuscarProduto(ctx context.Context, id uuid.UUID) (*domain.Produto, error) {
 	return s.prods.FindByID(ctx, id)
+}
+
+// ─── CatalogoReader (cross-module) ───────────────────────────────────────────
+
+// ExisteProduto retorna nil se o produto existir, ou o erro de domínio caso contrário.
+// Consumida como porta de saída por compras e vendas (duck typing sem importar catalogo/domain).
+func (s *Service) ExisteProduto(ctx context.Context, id uuid.UUID) error {
+	_, err := s.prods.FindByID(ctx, id)
+	return err
 }
 
 // ─── CatalogoWriter ──────────────────────────────────────────────────────────

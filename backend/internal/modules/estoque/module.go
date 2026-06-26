@@ -14,24 +14,29 @@ import (
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/auth"
 )
 
-// Module expõe o roteador do contexto estoque.
+// Module expõe o roteador e a porta cross-module do contexto estoque.
 type Module struct {
+	svc    *application.Service
 	router chi.Router
 }
 
 // New monta o módulo: instancia repositórios, serviço e roteador.
 // catWriter é implementado pelo módulo catálogo (catalogo.Module.Writer()).
 func New(pool *pgxpool.Pool, authMgr *auth.Manager, catWriter ports.CatalogoWriter) *Module {
-	movsRepo   := postgres.NewMovimentacaoRepository(pool)
+	movsRepo    := postgres.NewMovimentacaoRepository(pool)
 	ajustesRepo := postgres.NewAjusteRepository(pool)
 
 	svc     := application.NewService(movsRepo, ajustesRepo, catWriter)
 	handler := httpadapter.NewHandler(svc)
 
 	return &Module{
+		svc:    svc,
 		router: httpadapter.NewEstoqueRouter(handler, authMgr),
 	}
 }
 
 // Router retorna o roteador para montagem em /api/v1/estoque.
 func (m *Module) Router() chi.Router { return m.router }
+
+// Writer retorna a interface EstoqueWriter para uso por compras e vendas.
+func (m *Module) Writer() ports.EstoqueWriter { return m.svc }

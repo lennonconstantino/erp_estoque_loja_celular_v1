@@ -25,6 +25,7 @@ func NewService(movs ports.MovimentacaoRepository, ajustes ports.AjusteRepositor
 
 // Conformidade em tempo de compilação.
 var _ ports.EstoqueService = (*Service)(nil)
+var _ ports.EstoqueWriter  = (*Service)(nil)
 
 // ─── EstoqueService ──────────────────────────────────────────────────────────
 
@@ -108,4 +109,25 @@ func (s *Service) ConsultarAjustes(ctx context.Context, produtoID uuid.UUID, lim
 		offset = 0
 	}
 	return s.ajustes.ListByProduto(ctx, produtoID, limit, offset)
+}
+
+// ─── EstoqueWriter (cross-module) ────────────────────────────────────────────
+
+// RegistrarEntradaCompra lança uma movimentação do tipo COMPRA no razão e
+// atualiza o saldo materializado no catálogo. Chamado pelo módulo compras.
+func (s *Service) RegistrarEntradaCompra(ctx context.Context, produtoID, compraID, responsavelID uuid.UUID, quantidade int) error {
+	saldoAtual, err := s.movs.ConsultarSaldoAtual(ctx, produtoID)
+	if err != nil {
+		return err
+	}
+	novoSaldo := saldoAtual + quantidade
+	mov := domain.NovaMovimentacao(
+		produtoID, domain.TipoCompra, quantidade,
+		saldoAtual, novoSaldo,
+		"COMPRA", &compraID, &responsavelID,
+	)
+	if err := s.movs.Create(ctx, mov); err != nil {
+		return err
+	}
+	return s.catalogo.AtualizarSaldo(ctx, produtoID, novoSaldo)
 }

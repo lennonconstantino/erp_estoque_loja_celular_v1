@@ -58,6 +58,8 @@ type ProdutoService interface {
 // produtos (consumida como porta outbound por outros módulos).
 type CatalogoReader interface {
 	BuscarProduto(ctx context.Context, id uuid.UUID) (*domain.Produto, error)
+	// ExisteProduto retorna nil se o produto existir ou erro de domínio caso contrário.
+	ExisteProduto(ctx context.Context, id uuid.UUID) error
 }
 
 // CatalogoWriter é a interface exposta para que estoque atualize saldo e

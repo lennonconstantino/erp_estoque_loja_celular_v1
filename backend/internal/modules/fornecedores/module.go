@@ -16,8 +16,9 @@ import (
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/resilience"
 )
 
-// Module expõe o roteador do contexto para montagem no servidor.
+// Module expõe o roteador e a porta cross-module do contexto fornecedores.
 type Module struct {
+	svc    *application.Service
 	router chi.Router
 }
 
@@ -32,11 +33,14 @@ func New(pool *pgxpool.Pool, authMgr *auth.Manager, cepURL string) *Module {
 	)
 	cepGateway := cep.NewGateway(cepURL, cepPolicy)
 
-	svc := application.NewService(repo, cepGateway)
+	svc     := application.NewService(repo, cepGateway)
 	handler := httpadapter.NewHandler(svc)
 
-	return &Module{router: httpadapter.NewRouter(handler, authMgr)}
+	return &Module{svc: svc, router: httpadapter.NewRouter(handler, authMgr)}
 }
 
 // Router retorna o roteador do módulo para ser montado sob /api/v1/fornecedores.
 func (m *Module) Router() chi.Router { return m.router }
+
+// Writer retorna a interface FornecedorWriter para uso pelo módulo compras.
+func (m *Module) Writer() *application.Service { return m.svc }

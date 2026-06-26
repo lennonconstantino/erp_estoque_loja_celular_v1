@@ -129,21 +129,21 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/compras/domain/` — entidades `Compra`, `DetalheCompra`, erros
-- [ ] Criar `ports/inbound.go` — `CompraService` (CriarCompra, ConfirmarCompra, ListarCompras, BuscarCompra)
-- [ ] Criar `ports/outbound.go` — `CompraRepository`, `CatalogoReader`, `EstoqueWriter`
-- [ ] Criar `application/service.go` — caso de uso `ConfirmarCompra`: valida itens via `CatalogoReader`, persiste compra, emite movimentação via `EstoqueWriter`, atualiza `dt_ult_comp_for` no fornecedor (porta ou evento)
-- [ ] Criar `adapters/outbound/postgres/compra_repo.go`
-- [ ] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `compras:read`, `compras:write`
-- [ ] Criar `module.go` e montar em `main.go`
-- [ ] Testar: confirmar compra aumenta saldo do produto; movimentação registrada com `saldo_ant`/`saldo_atu`
+- [x] Criar `internal/modules/compras/domain/` — entidades `Compra`, `DetalheCompra`, erros
+- [x] Criar `ports/inbound.go` — `CompraService` (CriarCompra, ConfirmarCompra, ListarCompras, BuscarCompra)
+- [x] Criar `ports/outbound.go` — `CompraRepository`, `CatalogoReader`, `EstoqueWriter`, `FornecedorWriter`
+- [x] Criar `application/service.go` — caso de uso `ConfirmarCompra`: valida itens via `CatalogoReader`, persiste compra, emite movimentação via `EstoqueWriter`, atualiza `dt_ult_comp_for` via `FornecedorWriter`
+- [x] Criar `adapters/outbound/postgres/compra_repo.go`
+- [x] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `compras:read`, `compras:write`
+- [x] Criar `module.go` e montar em `main.go`
+- [x] Testar: confirmar compra aumenta saldo do produto; movimentação registrada com `saldo_ant`/`saldo_atu`
 
 ### Frontend
 
-- [ ] Criar `pages/ComprasPage.tsx` — listagem de compras
-- [ ] Criar formulário "Nova Compra": selecionar fornecedor + NF + adicionar itens (produto, qtd, custo, venda)
-- [ ] Confirmar compra: exibir resumo e botão de confirmação
-- [ ] Integrar com API (`GET /compras`, `POST /compras`, `POST /compras/{id}/confirmar`)
+- [x] Criar `pages/ComprasPage.tsx` — listagem de compras
+- [x] Criar formulário "Nova Compra": selecionar fornecedor + NF + adicionar itens (produto, qtd, custo, venda)
+- [x] Confirmar compra: exibir resumo e botão de confirmação
+- [x] Integrar com API (`GET /compras`, `POST /compras`, `POST /compras/{id}/confirmar`)
 
 ---
 

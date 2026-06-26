@@ -16,6 +16,7 @@ import (
 
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/catalogo"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/clientes"
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/compras"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/estoque"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/fornecedores"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/iam"
@@ -60,8 +61,9 @@ func main() {
 	iamMod := iam.New(pool, authMgr, cfg.JWTRefreshTTL)
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
 	fornecedoresMod := fornecedores.New(pool, authMgr, cfg.CepAPIURL)
-	catalogoMod := catalogo.New(pool, authMgr)
-	estoqueMod  := estoque.New(pool, authMgr, catalogoMod.Writer())
+	catalogoMod     := catalogo.New(pool, authMgr)
+	estoqueMod      := estoque.New(pool, authMgr, catalogoMod.Writer())
+	comprasMod      := compras.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), fornecedoresMod.Writer())
 
 	r := httpserver.NewRouter()
 	r.Handle("/metrics", obs.MetricsHandler)
@@ -72,6 +74,7 @@ func main() {
 		api.Mount("/categorias", catalogoMod.CategoriasRouter())
 		api.Mount("/produtos", catalogoMod.ProdutosRouter())
 		api.Mount("/estoque", estoqueMod.Router())
+		api.Mount("/compras", comprasMod.Router())
 		// ... demais módulos
 	})
 

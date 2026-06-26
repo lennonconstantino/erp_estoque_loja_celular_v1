@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -16,6 +17,7 @@ type FornecedorRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.Fornecedor, error)
 	FindByCNPJ(ctx context.Context, cnpj string) (*domain.Fornecedor, error)
 	List(ctx context.Context, q string, limit, offset int) ([]domain.Fornecedor, error)
+	AtualizarUltimaCompra(ctx context.Context, id uuid.UUID, data time.Time) error
 }
 
 // CepGateway é a porta de saída para consulta de CEP.

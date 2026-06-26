@@ -5,6 +5,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -113,6 +114,18 @@ func (r *FornecedorRepository) List(ctx context.Context, q string, limit, offset
 		out = append(out, *f)
 	}
 	return out, rows.Err()
+}
+
+func (r *FornecedorRepository) AtualizarUltimaCompra(ctx context.Context, id uuid.UUID, data time.Time) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE fornecedores.fornecedores SET dt_ult_comp_for=$2 WHERE id_for=$1`, id, data)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNaoEncontrado
+	}
+	return nil
 }
 
 type scanner interface {
