@@ -36,7 +36,7 @@ ON CONFLICT DO NOTHING;
 -- Usuário admin -------------------------------------------------------
 INSERT INTO iam.usuarios (nome_usr, email_usr, senha_hash_usr)
 VALUES ('Administrador','admin@loja.local',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy')  -- "admin123"
+        '$2a$10$pyDFD.3oMyE8ybklShF2QOoXTdLa4LVcKsiaz4q.iV9JR3abttuRG')  -- "admin123"
 ON CONFLICT (email_usr) DO NOTHING;
 
 -- Vincula admin ao papel ADMIN ----------------------------------------

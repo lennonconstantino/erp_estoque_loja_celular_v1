@@ -14,9 +14,10 @@ type Config struct {
 	AppEnv       string
 	AppPort      string
 	DatabaseURL  string
-	JWTSecret    string
-	JWTAccessTTL time.Duration
-	CepAPIURL    string
+	JWTSecret      string
+	JWTAccessTTL   time.Duration
+	JWTRefreshTTL  time.Duration
+	CepAPIURL      string
 
 	// Observabilidade (OpenTelemetry). OTLPEndpoint vazio mantém o tracing
 	// dormente; preencher OTEL_EXPORTER_OTLP_ENDPOINT liga a exportação de
@@ -34,9 +35,10 @@ func Load() *Config {
 		AppEnv:       getenv("APP_ENV", "development"),
 		AppPort:      getenv("APP_PORT", "8080"),
 		DatabaseURL:  getenv("DATABASE_URL", "postgres://erp@localhost:5432/erp_estoque?sslmode=disable"),
-		JWTSecret:    getenv("JWT_SECRET", "__INSECURE_DEV_JWT_SECRET__"),
-		JWTAccessTTL: getdur("JWT_ACCESS_TTL", 15*time.Minute),
-		CepAPIURL:    getenv("CEP_API_URL", "https://viacep.com.br/ws"),
+		JWTSecret:     getenv("JWT_SECRET", "__INSECURE_DEV_JWT_SECRET__"),
+		JWTAccessTTL:  getdur("JWT_ACCESS_TTL", 15*time.Minute),
+		JWTRefreshTTL: getdur("JWT_REFRESH_TTL", 720*time.Hour),
+		CepAPIURL:     getenv("CEP_API_URL", "https://viacep.com.br/ws"),
 
 		ServiceName:  getenv("OTEL_SERVICE_NAME", "erp-api"),
 		OTLPEndpoint: getenv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),

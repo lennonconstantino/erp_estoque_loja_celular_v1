@@ -17,10 +17,10 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ## Fase 0 — Infraestrutura local
 
-- [ ] Copiar `backend/.env.example` → `backend/.env` e preencher variáveis
-- [ ] Confirmar que `docker compose up -d` sobe db + migrate + api sem erros
-- [ ] Verificar `GET /health` → 200
-- [ ] Confirmar seed: login `admin@loja.local` / `admin123` funciona via `POST /api/v1/auth/login`
+- [x] Copiar `backend/.env.example` → `backend/.env` e preencher variáveis
+- [x] Confirmar que `docker compose up -d` sobe db + migrate + api sem erros
+- [x] Verificar `GET /health` → 200
+- [x] Confirmar seed: login `admin@loja.local` / `admin123` funciona via `POST /api/v1/auth/login`
 
 ---
 
@@ -30,23 +30,23 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/iam/domain/` — entidades `Usuario`, `Papel`, `Permissao` + erros de domínio
-- [ ] Criar `internal/modules/iam/ports/inbound.go` — `AuthService` (Login, Refresh, Logout, CriarUsuario, ListarUsuarios)
-- [ ] Criar `internal/modules/iam/ports/outbound.go` — `UsuarioRepository`, `TokenStore`
-- [ ] Criar `internal/modules/iam/application/service.go` — casos de uso (bcrypt, emissão de JWT via `platform/auth`, rotação de refresh token)
-- [ ] Criar `internal/modules/iam/adapters/outbound/postgres/usuario_repo.go` — CRUD em `iam.usuarios`, papéis, permissões, refresh tokens
-- [ ] Criar `internal/modules/iam/adapters/inbound/http/handler.go` — handlers: `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
-- [ ] Criar `internal/modules/iam/adapters/inbound/http/handler.go` — handlers de usuários: `GET /usuarios`, `POST /usuarios`, `PATCH /usuarios/{id}` (somente ADMIN)
-- [ ] Criar `internal/modules/iam/adapters/inbound/http/router.go` — rotas + RBAC
-- [ ] Criar `internal/modules/iam/module.go` — DI: instancia repo, service, router
-- [ ] Montar módulo em `cmd/api/main.go` sob `/api/v1`
-- [ ] Testar: login retorna `access_token` + `refresh_token`; refresh rotaciona; logout revoga
+- [x] Criar `internal/modules/iam/domain/` — entidades `Usuario`, `Papel`, `Permissao` + erros de domínio
+- [x] Criar `internal/modules/iam/ports/inbound.go` — `AuthService` (Login, Refresh, Logout, CriarUsuario, ListarUsuarios)
+- [x] Criar `internal/modules/iam/ports/outbound.go` — `UsuarioRepository`, `TokenStore`
+- [x] Criar `internal/modules/iam/application/service.go` — casos de uso (bcrypt, emissão de JWT via `platform/auth`, rotação de refresh token)
+- [x] Criar `internal/modules/iam/adapters/outbound/postgres/usuario_repo.go` — CRUD em `iam.usuarios`, papéis, permissões, refresh tokens
+- [x] Criar `internal/modules/iam/adapters/inbound/http/handler.go` — handlers: `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
+- [x] Criar `internal/modules/iam/adapters/inbound/http/handler.go` — handlers de usuários: `GET /usuarios`, `POST /usuarios`, `PATCH /usuarios/{id}` (somente ADMIN)
+- [x] Criar `internal/modules/iam/adapters/inbound/http/router.go` — rotas + RBAC
+- [x] Criar `internal/modules/iam/module.go` — DI: instancia repo, service, router
+- [x] Montar módulo em `cmd/api/main.go` sob `/api/v1`
+- [x] Testar: login retorna `access_token` + `refresh_token`; refresh rotaciona; logout revoga
 
 ### Frontend
 
-- [ ] Implementar fluxo de login em `LoginPage.tsx` (chamar `POST /api/v1/auth/login`, salvar tokens via `lib/auth.ts`)
-- [ ] Implementar proteção de rotas em `App.tsx` — redireciona para login se não autenticado
-- [ ] Implementar renovação automática de token (já esperada em `lib/api.ts`) e logout no menu
+- [x] Implementar fluxo de login em `LoginPage.tsx` (chamar `POST /api/v1/auth/login`, salvar tokens via `lib/auth.ts`)
+- [x] Implementar proteção de rotas em `App.tsx` — redireciona para login se não autenticado
+- [x] Implementar renovação automática de token (já esperada em `lib/api.ts`) e logout no menu
 
 ---
 
