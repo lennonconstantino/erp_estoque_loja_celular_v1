@@ -2,7 +2,7 @@
 
 > Sistema de gestão de estoque para loja de acessórios de celular — backend Go (monólito modular, arquitetura hexagonal), PostgreSQL e SPA React/Vite.
 
-![Status](https://img.shields.io/badge/status-WIP%20v1-orange) ![Go](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white) ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-WIP%20v1-orange) ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white) ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 📖 Sobre o Projeto
 
@@ -116,7 +116,7 @@ Permissões seguem o formato `recurso:acao` (ex.: `vendas:write`, `clientes:read
 
 ## 🚀 Tecnologias
 
-**Backend (Go 1.23)**
+**Backend (Go 1.25)**
 
 - **Router**: `github.com/go-chi/chi/v5` v5.1.0
 - **JWT**: `github.com/golang-jwt/jwt/v5` v5.2.1 (HS256)
@@ -144,7 +144,7 @@ Permissões seguem o formato `recurso:acao` (ex.: `vendas:write`, `clientes:read
 
 ## 📋 Pré-requisitos
 
-- **Go 1.23+**
+- **Go 1.25+**
 - **Docker & Docker Compose**
 - **pnpm** (frontend)
 - **PostgreSQL 16** (ou use o serviço `db` do Docker Compose / uma instância Supabase)
@@ -208,6 +208,27 @@ make up            # db + migrations + api + frontend (docker compose up -d --bu
 make down          # derruba os containers
 make logs          # segue os logs da api (use s=frontend, s=db, ... para outro serviço)
 make check-secrets # gate pré-deploy: falha se JWT_SECRET/DB_PASSWORD forem defaults de dev
+```
+
+**Observabilidade (stack separada — Prometheus + Grafana):**
+
+```bash
+# Subir
+docker compose -f docker-compose.observability.yml up -d
+# Grafana: http://localhost:3000 (admin/admin) · Prometheus: http://localhost:9090
+
+# Derrubar
+docker compose -f docker-compose.observability.yml down
+```
+
+**Teardown completo (limpa todos os recursos Docker do projeto):**
+
+```bash
+./scripts/docker/teardown.sh                           # containers + volume pgdata + rede
+./scripts/docker/teardown.sh --images                  # idem + imagens buildadas
+./scripts/docker/teardown.sh --recreate-volume         # idem + recria pgdata vazio
+./scripts/docker/teardown.sh --obs                     # idem + Prometheus/Grafana e seus volumes
+./scripts/docker/teardown.sh --obs --images --recreate-volume  # tudo
 ```
 
 ### Migrations (golang-migrate)
@@ -278,8 +299,10 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 
 ```
 .
-├── docker-compose.yml      # orquestração: db + migrate + api + frontend
-├── Makefile                # orquestra backend, frontend e infra (make help)
+├── docker-compose.yml                  # orquestração: db + migrate + api + frontend
+├── docker-compose.observability.yml    # stack opcional: Prometheus + Grafana
+├── Makefile                            # orquestra backend, frontend e infra (make help)
+├── scripts/docker/teardown.sh          # limpa todos os recursos Docker do projeto
 ├── backend/                # serviço Go (hexagonal) — ver backend/CLAUDE.md
 │   ├── cmd/api/            # entrypoint da API (main.go monta os módulos em /api/v1)
 │   ├── internal/

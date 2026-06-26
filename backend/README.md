@@ -1,6 +1,6 @@
 # Backend — ERP Estoque
 
-Serviço HTTP em **Go 1.23** que implementa o ERP de estoque. Estruturado como
+Serviço HTTP em **Go 1.25** que implementa o ERP de estoque. Estruturado como
 **monólito modular** com **arquitetura hexagonal** (Ports & Adapters): cada
 domínio é isolado e pode ser extraído para um microsserviço próprio sem
 reescrever a lógica de negócio.
@@ -16,7 +16,7 @@ reescrever a lógica de negócio.
 
 ## Pré-requisitos
 
-- Go 1.23+
+- Go 1.25+
 - PostgreSQL 16 (ou use o `docker compose` da raiz)
 - [`migrate`](https://github.com/golang-migrate/migrate) CLI para os alvos de migration do Makefile
 
@@ -161,8 +161,9 @@ Veja `.env.example`. Principais:
 
 ## Build com Docker
 
-`Dockerfile` multi-stage: compila um binário estático (`CGO_ENABLED=0`) e o serve
-numa imagem `alpine` enxuta, copiando junto a pasta `migrations/`.
+`Dockerfile` multi-stage: imagem de build `golang:1.25-alpine` compila um binário
+estático (`CGO_ENABLED=0`) e o serve numa imagem `alpine` enxuta, copiando junto a
+pasta `migrations/`.
 
 Mais detalhes em [`../docs/`](../docs/README.md) e nas convenções para o Claude
 em [`CLAUDE.md`](CLAUDE.md).

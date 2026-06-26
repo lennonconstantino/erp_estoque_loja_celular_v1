@@ -34,8 +34,15 @@ desprezível agora; ligar traces depois é setar uma env var — zero mudança d
   principal) sobe Prometheus + Grafana sob demanda:
 
   ```bash
+  # Subir
   docker compose -f docker-compose.observability.yml up -d
   # Grafana http://localhost:3000 (admin/admin) · Prometheus http://localhost:9090
+
+  # Derrubar (stack de obs isolada)
+  docker compose -f docker-compose.observability.yml down
+
+  # Teardown completo (app + obs + volumes de dados do Prometheus/Grafana)
+  ./scripts/docker/teardown.sh --obs
   ```
 
   O Grafana já vem com o datasource Prometheus provisionado
