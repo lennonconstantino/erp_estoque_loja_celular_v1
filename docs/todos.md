@@ -182,21 +182,21 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar endpoints de relatório (podem ser `GET` específicos em módulos existentes ou num módulo `relatorios` dedicado):
-  - [ ] `GET /relatorios/produtos/abaixo-do-minimo` — RBAC: `relatorios:read`
-  - [ ] `GET /relatorios/produtos/mais-vendidos?periodo=` — RBAC: `relatorios:read`
-  - [ ] `GET /relatorios/produtos/menos-vendidos?periodo=` — RBAC: `relatorios:read`
-  - [ ] `GET /relatorios/vendas?de=&ate=` — resumo por período
-  - [ ] `GET /relatorios/compras?de=&ate=` — resumo por período
-- [ ] Registrar rotas em `main.go`
+- [x] Criar endpoints de relatório (módulo `relatorios` dedicado):
+  - [x] `GET /relatorios/produtos/abaixo-do-minimo` — RBAC: `relatorios:read`
+  - [x] `GET /relatorios/produtos/mais-vendidos?de=&ate=&limite=` — RBAC: `relatorios:read`
+  - [x] `GET /relatorios/produtos/menos-vendidos?de=&ate=&limite=` — RBAC: `relatorios:read`
+  - [x] `GET /relatorios/vendas?de=&ate=` — resumo por período
+  - [x] `GET /relatorios/compras?de=&ate=` — resumo por período
+- [x] Registrar rotas em `main.go`
 
 ### Frontend
 
-- [ ] Criar `pages/RelatoriosPage.tsx` — navegação entre relatórios
-- [ ] Exibir tabela de produtos abaixo do mínimo (destacar em vermelho)
-- [ ] Exibir tabela de mais/menos vendidos por período
-- [ ] Exibir resumo de vendas e compras por período
-- [ ] Integrar com API de relatórios
+- [x] Criar `pages/RelatoriosPage.tsx` — navegação entre relatórios (abas)
+- [x] Exibir tabela de produtos abaixo do mínimo (destacar em vermelho)
+- [x] Exibir tabela de mais/menos vendidos por período
+- [x] Exibir resumo de vendas e compras por período (cards de métricas)
+- [x] Integrar com API de relatórios
 
 ---
 

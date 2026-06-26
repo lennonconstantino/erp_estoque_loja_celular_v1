@@ -9,6 +9,7 @@ import AjustesEstoquePage from '@/pages/AjustesEstoquePage'
 import ComprasPage from '@/pages/ComprasPage'
 import VendasPage from '@/pages/VendasPage'
 import NovaVendaPage from '@/pages/NovaVendaPage'
+import RelatoriosPage from '@/pages/RelatoriosPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const hasSession = isAuthenticated() || getRefreshToken() !== null
@@ -73,6 +74,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <NovaVendaPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/relatorios"
+          element={
+            <PrivateRoute>
+              <RelatoriosPage />
             </PrivateRoute>
           }
         />
