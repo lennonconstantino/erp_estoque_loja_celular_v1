@@ -40,11 +40,15 @@ services:
       DATABASE_URL: postgres://${DB_USER:-erp}:${DB_PASSWORD?Defina DB_PASSWORD}@db:5432/${DB_NAME:-erp_estoque}?sslmode=disable
       APP_PORT: "8080"
       JWT_SECRET: ${JWT_SECRET?Defina JWT_SECRET}
+      ALLOWED_ORIGINS: "http://localhost,http://localhost:80"
     ports:
       - "8080:8080"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
     depends_on:
       - api
     ports:

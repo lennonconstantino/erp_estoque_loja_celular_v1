@@ -30,12 +30,17 @@ Cada arquivo possui o par `.down.sql` para rollback.
 
 ```bash
 cp backend/.env.example backend/.env
-docker compose up -d        # db -> migrate (aplica tudo) -> api
+# edite backend/.env: preencha DB_PASSWORD e DATABASE_URL com URL literal
+make up                     # db -> migrate (aplica tudo) -> api -> frontend
 ```
 
 O `docker-compose.yml` fica na raiz do projeto. O serviço `migrate` roda
 `migrate ... up` automaticamente após o Postgres ficar saudável; a `api` só
 sobe depois das migrations.
+
+> **Não use `docker compose up -d` diretamente** — o Makefile precisa passar
+> `--env-file backend/.env` para que as variáveis do arquivo sejam lidas
+> corretamente pelo Docker Compose.
 
 ### Local (golang-migrate CLI)
 

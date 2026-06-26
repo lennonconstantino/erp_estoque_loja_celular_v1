@@ -42,11 +42,14 @@ Login/Auth ── Usuários
 
 ```bash
 cp backend/.env.example backend/.env
-docker compose up -d     # sobe Postgres + migrations + API
-# ou, localmente:
-cd backend
-make migrate-up          # cria schemas e tabelas
-make run                 # inicia a API em http://localhost:8080
+# edite backend/.env: preencha DB_PASSWORD e DATABASE_URL (URL literal, sem ${VAR})
+make up                  # sobe Postgres + migrations + API + frontend (porta 80)
+# ou, localmente sem Docker:
+make be-run              # inicia só a API em http://localhost:8080
 ```
+
+> **Importante:** use sempre `make up` em vez de `docker compose up -d` direto.
+> O Makefile passa `--env-file backend/.env`; sem ele o Docker Compose não encontra
+> as variáveis e falha na interpolação.
 
 Usuário inicial (seed): `admin@loja.local` / `admin123` — **troque em produção**.
