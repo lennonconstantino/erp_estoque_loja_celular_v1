@@ -56,21 +56,21 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/fornecedores/domain/` — entidade `Fornecedor` (CNPJ), erros
-- [ ] Criar `ports/inbound.go` — `FornecedorService`
-- [ ] Criar `ports/outbound.go` — `FornecedorRepository`, `CepGateway` (reusar interface de clientes)
-- [ ] Criar `application/service.go` — CRUD + busca de CEP
-- [ ] Criar `adapters/outbound/postgres/fornecedor_repo.go`
-- [ ] Reusar `adapters/outbound/cep/viacep.go` (já existe em clientes; mover para `platform/cep` ou injetar diretamente)
-- [ ] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `fornecedores:read`, `fornecedores:write`
-- [ ] Criar `module.go` e montar em `main.go`
-- [ ] Testar CRUD de fornecedor com CNPJ único e preenchimento de CEP
+- [x] Criar `internal/modules/fornecedores/domain/` — entidade `Fornecedor` (CNPJ), erros
+- [x] Criar `ports/inbound.go` — `FornecedorService`
+- [x] Criar `ports/outbound.go` — `FornecedorRepository`, `CepGateway` (reusar interface de clientes)
+- [x] Criar `application/service.go` — CRUD + busca de CEP
+- [x] Criar `adapters/outbound/postgres/fornecedor_repo.go`
+- [x] Reusar `adapters/outbound/cep/viacep.go` (criado em fornecedores/adapters/outbound/cep com domínio próprio)
+- [x] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `fornecedores:read`, `fornecedores:write`
+- [x] Criar `module.go` e montar em `main.go`
+- [x] Testar CRUD de fornecedor com CNPJ único e preenchimento de CEP
 
 ### Frontend
 
-- [ ] Criar `pages/FornecedoresPage.tsx` — listagem com paginação
-- [ ] Criar formulário de cadastro/edição (CNPJ + contatos + CEP automático)
-- [ ] Integrar com API (`GET /fornecedores`, `POST /fornecedores`, `PUT /fornecedores/{id}`)
+- [x] Criar `pages/FornecedoresPage.tsx` — listagem com paginação
+- [x] Criar formulário de cadastro/edição (CNPJ + contatos + CEP automático)
+- [x] Integrar com API (`GET /fornecedores`, `POST /fornecedores`, `PUT /fornecedores/{id}`)
 
 ---
 

@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/clientes"
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/fornecedores"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/iam"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/auth"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/platform/config"
@@ -56,13 +57,14 @@ func main() {
 	// Módulos (cada bounded context monta a si mesmo via DI).
 	iamMod := iam.New(pool, authMgr, cfg.JWTRefreshTTL)
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
+	fornecedoresMod := fornecedores.New(pool, authMgr, cfg.CepAPIURL)
 
 	r := httpserver.NewRouter()
 	r.Handle("/metrics", obs.MetricsHandler)
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Mount("/", iamMod.Router())
 		api.Mount("/clientes", clientesMod.Router())
-		// api.Mount("/fornecedores", fornecedoresMod.Router())
+		api.Mount("/fornecedores", fornecedoresMod.Router())
 		// ... demais módulos
 	})
 

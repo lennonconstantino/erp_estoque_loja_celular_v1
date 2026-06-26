@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { getRefreshToken, isAuthenticated } from '@/lib/auth'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
+import FornecedoresPage from '@/pages/FornecedoresPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const hasSession = isAuthenticated() || getRefreshToken() !== null
@@ -13,6 +14,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/fornecedores"
+          element={
+            <PrivateRoute>
+              <FornecedoresPage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/*"
           element={
