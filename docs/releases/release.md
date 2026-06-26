@@ -3,6 +3,33 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.1.0] — 2026-06-26
+
+Hardening de produção, acessibilidade (WCAG) em todas as telas e polimento do
+kit de UI, posteriores à entrega do MVP.
+
+### Adicionado
+
+- **Validação fail-closed da config de produção**: a API aborta o startup quando
+  `JWT_SECRET` ou `DATABASE_URL` estão ausentes ou usam defaults inseguros de
+  desenvolvimento, com testes unitários cobrindo a lógica de validação. (`06e9add`)
+- Documentação de segurança das checagens de config em `CLAUDE.md` e nos guias de
+  deploy. (`06e9add`)
+- Suporte a **prefers-reduced-motion** (WCAG 2.3.3) e link "pular para o conteúdo"
+  (skip-to-content). (`06e9add`)
+
+### Alterado
+
+- Acessibilidade em todas as páginas: `aria-label` em botões de ícone,
+  `role="alert"` em mensagens de erro e associação correta de labels a campos de
+  formulário. (`06e9add`)
+- Modais migrados para **Radix Dialog**, com conformidade total de acessibilidade
+  (foco, ESC, leitor de tela). (`06e9add`)
+- Cores hardcoded substituídas por tokens semânticos do tema, garantindo
+  consistência no dark/light mode; polimento geral dos componentes de UI. (`06e9add`)
+- `.env.production.example` usa placeholder de projeto em vez de host Supabase
+  hardcoded; README e design-system docs atualizados. (`06e9add`)
+
 ## [1.0.0] — 2026-06-26
 
 Entrega completa do MVP: todos os bounded contexts implementados em Go, frontend
@@ -113,5 +140,6 @@ observabilidade, hardening de segredos e documentação base (anterior ao MVP).
 - Tratamento de segredos no docker-compose via interpolação de env obrigatória,
   guia de secret scanning e itens de checklist pré-deploy. (`a55d305`)
 
+[1.1.0]: #110--2026-06-26
 [1.0.0]: #100--2026-06-26
 [0.1.0]: #010--2026-06-25
