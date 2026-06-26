@@ -300,7 +300,7 @@ resta a Fase 9 — deploy).
   não usados (NovaVenda, Relatórios), `icon: any` → `LucideIcon` no Dashboard
 - [x] Verificação: `pnpm tsc --noEmit`, `pnpm lint` e `pnpm build` sem erros
 - [ ] Pendências de a11y/UX e toast-tema documentadas em
-  [docs/setup/frontend-setup.md](setup/frontend-setup.md#pendências-e-próximos-passos) — agendar
+  [docs/reference/design-system.md](reference/design-system.md#pendências-e-próximos-passos-ui) — agendar
 
 ---
 
@@ -312,3 +312,24 @@ resta a Fase 9 — deploy).
 - [ ] Lançar ajuste com motivo → registro imutável no histórico
 - [ ] Emitir relatório de vendas e compras do período
 - [ ] Operação de um dia completo sem planilha, sem saldo negativo, sem erro fiscal
+
+---
+
+## Hardening de segurança — Secrets & Config (review focado)
+
+> Revisão focada com a skill `security-best-practices` (specs Go + React). Escopo:
+> Secrets & Config (GO-CONFIG-001, REACT-CONFIG-001).
+
+- [x] **F1+F2 — fail-closed em produção:** `Config.Validate()` recusa subir quando
+  `JWT_SECRET`/`DATABASE_URL` estão vazios ou no default inseguro de dev; chamada em
+  `cmd/api/main.go`. Sentinelas extraídas como consts (`devJWTSecret`/`devDatabaseURL`).
+- [x] **D1 — testes:** `config_test.go` cobre prod inseguro/seguro, case-insensitive e
+  dev permissivo. `go test -cover ./internal/platform/config/...` = **84.2%** (≥ 80%).
+- [x] **F3 — info disclosure:** host real do Supabase trocado por `SEU_PROJECT_REF` em
+  `backend/.env.production.example`.
+- [x] Verificação: `go vet ./...`, `go build ./...` e suíte completa (`go test ./...`) OK.
+- [x] Confirmado (review): `.env`/`.env.production` reais nunca versionados nem no
+  histórico; sem logging de segredos; bundle do frontend expõe só `VITE_API_BASE_URL`.
+- [x] **D3 — juiz independente:** veredito **CONFORME** (sem buracos no fail-closed; cobertura 84.2%; vet/build/test OK; sem regressões).
+- [x] **Docs atualizadas:** `backend/CLAUDE.md` (§Config), `docs/reference/security.md` e
+  `docs/setup/railway-deployment.md` documentam o fail-closed de produção.

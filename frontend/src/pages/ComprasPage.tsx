@@ -246,7 +246,7 @@ export default function ComprasPage() {
       align: 'right',
       cell: (c) => (
         <div className="flex items-center justify-end gap-2">
-          <button title="Ver detalhes" onClick={() => verDetalhe(c.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted">
+          <button aria-label="Ver detalhes" title="Ver detalhes" onClick={() => verDetalhe(c.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted">
             <Eye className="h-4 w-4" />
           </button>
           {c.status === 'RASCUNHO' && (
@@ -276,7 +276,7 @@ export default function ComprasPage() {
         </Button>
       }
     >
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -374,7 +374,7 @@ export default function ComprasPage() {
                     </div>
                     <div className="col-span-1 flex flex-col items-center justify-center">
                       <label className={compactLabelClass}>Margem</label>
-                      <span className={cn('text-[10px] font-black font-mono', margemItem(it) > 0 ? 'text-green-500' : 'text-muted-foreground/30')}>
+                      <span className={cn('text-[10px] font-black font-mono', margemItem(it) > 0 ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground/30')}>
                         {margemItem(it).toFixed(0)}%
                       </span>
                     </div>
@@ -397,7 +397,7 @@ export default function ComprasPage() {
               </div>
             </div>
 
-            {erroForm && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
+            {erroForm && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button variant="secondary" onClick={() => setModalAberto(false)}>Cancelar</Button>
@@ -440,7 +440,7 @@ export default function ComprasPage() {
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Produtos Recebidos</p>
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-muted-foreground opacity-50 font-black uppercase tracking-tighter">
+                  <tr className="text-muted-foreground font-black uppercase tracking-tighter">
                     <th className="py-2 text-left">Descrição</th>
                     <th className="py-2 text-right">Qtd</th>
                     <th className="py-2 text-right">Custo</th>
@@ -455,7 +455,7 @@ export default function ComprasPage() {
                       <td className="py-3 text-right font-black font-mono">{it.quantidade}</td>
                       <td className="py-3 text-right text-muted-foreground font-mono">{brl(it.preco_compra)}</td>
                       <td className="py-3 text-right text-muted-foreground font-mono">{brl(it.preco_venda)}</td>
-                      <td className="py-3 text-right font-black font-mono text-green-500">{it.margem.toFixed(1)}%</td>
+                      <td className="py-3 text-right font-black font-mono text-green-700 dark:text-green-400">{it.margem.toFixed(1)}%</td>
                     </tr>
                   ))}
                 </tbody>

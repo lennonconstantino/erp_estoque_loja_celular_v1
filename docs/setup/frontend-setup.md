@@ -1,6 +1,6 @@
 # Frontend — notas para agentes
 
-Esta é a SPA React do ERP de estoque para loja de acessórios de celular. Este arquivo descreve as convenções específicas do frontend.
+Esta é a SPA React do ERP de estoque para loja de acessórios de celular. Este arquivo descreve as convenções **operacionais** do frontend (stack, deps, build, rede). A **linguagem visual** (kit de UI, tokens/tema, paleta, acessibilidade) tem doc próprio: [Design System](../reference/design-system.md).
 
 ## Stack
 
@@ -42,7 +42,7 @@ Se sim à (3), adicione — mas documente a decisão no commit.
 frontend/
 ├── src/
 │   ├── components/
-│   │   └── ui/            # Kit de UI compartilhado (ver seção abaixo) + primitivos shadcn
+│   │   └── ui/            # Kit de UI compartilhado (ver Design System) + primitivos shadcn
 │   ├── lib/               # Helpers sem dependência de framework (http, api, auth, env, utils)
 │   ├── pages/             # Componentes de nível de rota (uma página por tela do dashboard)
 │   ├── App.tsx            # Router + PrivateRoute (guarda de sessão)
@@ -56,64 +56,13 @@ frontend/
 
 Manter imports consistentes com o alias `@/*` (ex.: `@/lib/api`, `@/components/ui/button`).
 
-## Kit de UI compartilhado (`@/components/ui`)
+## Design system
 
-Para manter **todas as telas com o mesmo padrão visual** (a divergência anterior
-nasceu de cada página reimplementar a própria casca), os primitivos abaixo são a
-fonte única de verdade. Páginas novas **devem** compô-los em vez de remontar
-cabeçalho/tabela/modal na mão.
-
-Todos os primitivos usam **tokens semânticos do tema** (`bg-card`, `text-foreground`,
-`border-border`, `text-muted-foreground`, `text-primary`, `text-destructive`…) — nunca
-cores cruas (`text-red-600`, `bg-white`, azul/índigo ad-hoc). É o que garante a
-adaptação automática a Dark/Light (ver [Tema (Dark/Light)](#tema-darklight)).
-
-| Componente | Papel |
-|------------|-------|
-| `page-shell.tsx` → `PageShell` | Casca da página: **`Sidebar` fixa** + cabeçalho técnico (breadcrumb/voltar + `CommandPalette` + `ThemeToggle` + `actions`) e `<main>` centralizado (`maxWidth` configurável). |
-| `sidebar.tsx` → `Sidebar` | Navegação lateral fixa (grupos Principal/Gestão via `NavLink`) + logout. |
-| `button.tsx` → `Button` / `buttonClasses` | Botão pill com variantes `primary`, `secondary`, `danger`, `success`, `ghost` e tamanhos `sm`/`md`/`icon`. **Nunca** usar azul/índigo ad-hoc. `buttonClasses(...)` aplica o estilo a um `<Link>`. |
-| `data-table.tsx` → `DataTable<T>` | Tabela padrão (cartão, cabeçalho minimalista, hover, estados de loading/vazio) com **ordenação por coluna** embutida. |
-| `tabs.tsx` → `Tabs<T>` | Abas técnicas estilo pill (controladas via `activeTab`/`onTabChange`). Em uso na tela de Relatórios. |
-| `badge.tsx` → `StatusBadge` | Selo de status com tons `success` / `neutral` / `warning` / `danger`. |
-| `modal.tsx` → `Modal` | Janela modal padrão (overlay + cabeçalho + botão fechar; `maxWidth` até `max-w-4xl`). |
-| `field.tsx` → `Field` / `inputClasses` / `inputClassesCompact` / `compactLabelClass` | Rótulo de formulário + classe pill de `input`/`select`/`textarea`. Use `inputClasses()` no padrão e **`inputClassesCompact()` + `compactLabelClass`** nas grades densas de itens (linhas de Compras e do PDV). |
-| `command-palette.tsx` / `command.tsx` / `dialog.tsx` | Paleta de comandos (⌘K) para navegação rápida, sobre os primitivos shadcn `Command`/`Dialog` (Radix Dialog + `cmdk`). |
-| `theme-toggle.tsx` → `ThemeToggle` | Alternância Dark/Light (consome `useTheme` de `@/lib/theme`). |
-| `sonner.tsx` → `Toaster` + `toast` | Notificações (sucesso/erro). `<Toaster>` é montado uma vez em `App.tsx`; páginas chamam `toast.success/error`. |
-
-### Ordenação de tabelas
-
-`DataTable` ordena no cliente as linhas já carregadas. Uma coluna vira ordenável
-ao declarar `sortAccessor: (row) => valor` (string ordena com `localeCompare`
-pt-BR; número, numericamente; datas, por timestamp). O cabeçalho cicla
-**asc → desc → sem ordenação** ao clicar; colunas de ação (ícones) não recebem
-`sortAccessor`.
-
-> Em telas paginadas no servidor (clientes, produtos, categorias, estoque) a
-> ordenação atua sobre a **página atual**. Ordenação global exigiria parâmetros
-> `sort`/`order` nos endpoints — ainda não implementado.
-
-## Tema (Dark/Light)
-
-O tema é gerido por `@/lib/theme` (`ThemeProvider` + hook `useTheme`), montado no topo
-da árvore em `App.tsx`. Ele alterna a classe `.dark` no `<html>` e persiste a escolha
-em `localStorage` (chave `theme`), com fallback para `prefers-color-scheme` na primeira
-visita. O `ThemeToggle` no cabeçalho do `PageShell` dispara `toggleTheme()`.
-
-Os **tokens** (cores, raio) ficam em `src/index.css`: o bloco `:root` define o tema
-claro e `.dark` o escuro, ambos como variáveis HSL consumidas pelo Tailwind
-(`bg-background`, `text-foreground`, `bg-card`, `border-border`, `text-primary`,
-`text-destructive`, etc.). **Regra prática:** estilize componentes só com esses tokens —
-qualquer cor crua (`text-red-600`, `bg-white`, `bg-indigo-500`) não acompanha a troca de
-tema e quebra a consistência. Para status/erros use os tokens `destructive`/`success` (ou
-o `StatusBadge`), não `red-600`/`green-600` soltos.
-
-> **Pendência conhecida:** `sonner.tsx` lê `useTheme` de `next-themes` (resíduo do
-> template shadcn), mas o provider real é o `@/lib/theme` — então os toasts caem no tema
-> `system` em vez de seguir o toggle. Trocar por `useTheme` de `@/lib/theme` quando for
-> mexer em notificações. Ver também as pendências de acessibilidade em
-> [Pendências e próximos passos](#pendências-e-próximos-passos).
+A linguagem visual — **catálogo do kit de UI**, **tema Dark/Light**, **tokens e paleta com as
+invariantes de contraste**, e a **baseline de acessibilidade** — está documentada em
+[docs/reference/design-system.md](../reference/design-system.md). Regra de ouro: telas novas
+**compõem** os primitivos de `@/components/ui` e estilizam **só com tokens semânticos** do tema
+(nunca cor crua). Detalhes, restrições de contraste e como reauditar o a11y estão lá.
 
 ## Estilo de código
 
@@ -146,6 +95,10 @@ Variável obrigatória:
 
 **Sem testes de frontend.** Não criar arquivos `*.test.ts` / `*.test.tsx` nem instalar test runner. A verificação do frontend é feita manualmente no browser, mais `pnpm tsc --noEmit` e `pnpm lint`. Se você se pegar pensando em vitest, Playwright ou Cypress — pare. Correção de lógica compartilhada vem de código simples e bem tipado, não de suíte de testes.
 
+> Exceção pontual: a **auditoria de acessibilidade** roda Playwright + `@axe-core/playwright`
+> num diretório scratch (fora do `package.json`), não como suíte versionada. Ver
+> [Design System → Acessibilidade](../reference/design-system.md#acessibilidade-a11y).
+
 ## Anti-padrões (rejeitados)
 
 - Ler `import.meta.env.X` diretamente fora de `lib/env.ts`.
@@ -156,23 +109,4 @@ Variável obrigatória:
 - Reimplementar manualmente um primitivo que o shadcn já oferece.
 - Usar Next.js, SSR ou qualquer framework que exija um servidor Node na frente da SPA.
 - Usar `@supabase/supabase-js` no frontend — o Supabase é usado apenas como host do PostgreSQL pelo backend.
-
-## Pendências e próximos passos
-
-Itens de polimento levantados na padronização visual/refino do kit, ainda em aberto:
-
-- **Toasts no tema certo:** `sonner.tsx` importa `useTheme` de `next-themes`, mas o
-  provider é o `@/lib/theme` → toasts ficam em `system`. Trocar a importação.
-- **Acessibilidade de formulários:** `Field` renderiza `<label>` sem `htmlFor` e os
-  inputs não têm `id`/`name`/`autocomplete` — associar rótulo↔controle e adicionar
-  `autocomplete`/`inputMode` adequados (email, tel, postal-code, numeric).
-- **Botões-ícone:** vários usam só `title`; adicionar `aria-label` (ex.: editar, ver
-  detalhe, fechar).
-- **`prefers-reduced-motion`:** as animações `animate-in`/`zoom`/`slide` não têm
-  variante reduzida — adicionar bloco global em `index.css`.
-- **Navegação semântica:** o botão "voltar" do `PageShell` usa `<button onClick={navigate}>`;
-  trocar por `<Link>` para suportar Cmd/middle-click.
-- **`color-scheme`/`theme-color`:** declarar `color-scheme` no `.dark` e
-  `<meta name="theme-color">` no `index.html` (corrige scrollbars/controles nativos).
-
-> Estes itens **não bloqueiam** o uso atual; são melhorias de a11y/UX a agendar.
+- Cor crua no lugar de token semântico do tema (ver [Design System](../reference/design-system.md)).

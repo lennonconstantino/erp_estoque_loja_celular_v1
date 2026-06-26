@@ -180,7 +180,7 @@ export default function ProdutosPage() {
       hideBelow: 'sm', 
       sortAccessor: (p) => p.margem_pct, 
       cell: (p) => (
-        <span className={cn('font-black font-mono text-xs', p.margem_pct > 0 ? 'text-green-500' : 'text-destructive')}>
+        <span className={cn('font-black font-mono text-xs', p.margem_pct > 0 ? 'text-green-700 dark:text-green-400' : 'text-destructive')}>
           {p.margem_pct.toFixed(1)}%
         </span>
       ),
@@ -197,7 +197,7 @@ export default function ProdutosPage() {
             <span className={cn('font-mono font-black', abaixoMin ? 'text-destructive' : 'text-foreground')}>
               {p.estoque_atual}
             </span>
-            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-tighter opacity-50">
+            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-tighter">
               mín: {p.estoque_minimo}
             </span>
           </div>
@@ -216,7 +216,7 @@ export default function ProdutosPage() {
       header: '',
       align: 'right',
       cell: (p) => (
-        <button onClick={() => abrirEditar(p)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" title="Editar">
+        <button onClick={() => abrirEditar(p)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" aria-label="Editar" title="Editar">
           <Pencil className="w-4 h-4" />
         </button>
       ),
@@ -245,6 +245,7 @@ export default function ProdutosPage() {
             className={inputClasses() + ' flex-1'}
           />
           <select
+            aria-label="Filtrar por categoria"
             value={filtroCategoria}
             onChange={e => setFiltroCategoria(e.target.value)}
             className={inputClasses() + ' w-auto hidden sm:block'}
@@ -256,7 +257,7 @@ export default function ProdutosPage() {
         </form>
       </div>
 
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -291,7 +292,7 @@ export default function ProdutosPage() {
       {modalAberto && (
         <Modal title={editando ? 'Editar Especificações' : 'Cadastrar Novo Produto'} onClose={() => setModalAberto(false)} maxWidth="max-w-2xl">
           <form onSubmit={salvar} className="px-8 py-8 space-y-8 animate-in fade-in duration-300">
-            {erroModal && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroModal}</p>}
+            {erroModal && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroModal}</p>}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <Field label="Categoria do Produto *">
@@ -358,7 +359,7 @@ export default function ProdutosPage() {
             {(parseFloat(form.preco_custo) > 0 || parseFloat(form.preco_venda) > 0) && (
               <div className={cn(
                 "p-4 rounded-2xl border flex justify-between items-center",
-                margemCalculada > 0 ? "bg-green-500/5 border-green-500/20 text-green-500" : "bg-destructive/5 border-destructive/20 text-destructive"
+                margemCalculada > 0 ? "bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"
               )}>
                 <span className="text-[10px] font-black uppercase tracking-widest leading-none">Margem de Lucro Estimada</span>
                 <strong className="text-xl font-black font-mono tracking-tighter">{margemCalculada.toFixed(2)}%</strong>

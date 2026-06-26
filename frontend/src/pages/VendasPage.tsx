@@ -114,7 +114,7 @@ export default function VendasPage() {
       sortAccessor: (v) => (v.consumidor_final ? '' : v.cliente_id ?? ''),
       cell: (v) =>
         v.consumidor_final ? (
-          <span className="text-muted-foreground/50 italic text-xs uppercase tracking-widest font-bold">Consumidor final</span>
+          <span className="text-muted-foreground italic text-xs uppercase tracking-widest font-bold">Consumidor final</span>
         ) : (
           <span className="font-mono text-xs text-muted-foreground">{v.cliente_id?.slice(0, 8)}…</span>
         ),
@@ -132,7 +132,7 @@ export default function VendasPage() {
       header: '',
       align: 'right',
       cell: (v) => (
-        <button onClick={() => abrirDetalhe(v.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted" title="Ver detalhe">
+        <button onClick={() => abrirDetalhe(v.id)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted" aria-label="Ver detalhe" title="Ver detalhe">
           <Eye className="w-4 h-4" />
         </button>
       ),
@@ -151,7 +151,7 @@ export default function VendasPage() {
         </Link>
       }
     >
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -197,7 +197,7 @@ export default function VendasPage() {
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Itens da Transação</p>
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-muted-foreground opacity-50 font-black uppercase tracking-tighter">
+                  <tr className="text-muted-foreground font-black uppercase tracking-tighter">
                     <th className="py-2 text-left">Referência</th>
                     <th className="py-2 text-right">Qtd</th>
                     <th className="py-2 text-right">Unitário</th>

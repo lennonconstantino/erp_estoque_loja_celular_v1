@@ -178,7 +178,7 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       {/* conteúdo por aba */}
       {aba === 'abaixo-minimo' && (
@@ -223,10 +223,10 @@ export default function RelatoriosPage() {
 function CardMetrica({ titulo, valor, sufixo }: { titulo: string; valor: string; sufixo?: string }) {
   return (
     <div className="bg-card rounded-2xl border border-border p-8 shadow-sm group hover:border-primary/40 hover:shadow-md transition-all duration-300">
-      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 leading-none opacity-60 group-hover:opacity-100 transition-opacity">{titulo}</p>
+      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 leading-none group-hover:opacity-100 transition-opacity">{titulo}</p>
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-black tracking-tighter text-foreground font-mono leading-none">{valor}</span>
-        {sufixo && <span className="text-xs font-black text-muted-foreground uppercase tracking-widest opacity-40">{sufixo}</span>}
+        {sufixo && <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{sufixo}</span>}
       </div>
     </div>
   )

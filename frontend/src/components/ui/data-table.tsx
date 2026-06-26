@@ -86,7 +86,7 @@ export function DataTable<T>({
                   c.thClassName,
                 )
                 if (!ordenavel) {
-                  return <th key={i} className={baseTh}>{c.header}</th>
+                  return <th key={i} className={baseTh}>{c.header === '' ? <span className="sr-only">Ações</span> : c.header}</th>
                 }
                 return (
                   <th key={i} className={baseTh} aria-sort={ativa ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>

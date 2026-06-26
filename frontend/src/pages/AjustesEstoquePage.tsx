@@ -145,17 +145,17 @@ export default function AjustesEstoquePage() {
   const colunasMov: Column<Movimentacao>[] = [
     { header: 'Tipo', sortAccessor: (m) => rotulaTipo[m.tipo] ?? m.tipo, cell: (m) => <StatusBadge tone={toneTipo[m.tipo] ?? 'neutral'}>{rotulaTipo[m.tipo] ?? m.tipo}</StatusBadge> },
     { header: 'Qtd', align: 'right', sortAccessor: (m) => m.quantidade, cell: (m) => <span className="font-mono">{m.quantidade}</span> },
-    { header: 'Saldo Antes', align: 'right', hideBelow: 'sm', sortAccessor: (m) => m.saldo_antes, cell: (m) => <span className="font-mono text-gray-500">{m.saldo_antes}</span> },
+    { header: 'Saldo Antes', align: 'right', hideBelow: 'sm', sortAccessor: (m) => m.saldo_antes, cell: (m) => <span className="font-mono text-muted-foreground">{m.saldo_antes}</span> },
     { header: 'Saldo Depois', align: 'right', sortAccessor: (m) => m.saldo_depois, cell: (m) => <span className="font-mono font-semibold">{m.saldo_depois}</span> },
-    { header: 'Origem', hideBelow: 'md', sortAccessor: (m) => m.origem_tipo, cell: (m) => <span className="text-gray-500">{m.origem_tipo || '—'}</span> },
-    { header: 'Data', hideBelow: 'sm', sortAccessor: (m) => new Date(m.criado_em).getTime(), cell: (m) => <span className="text-gray-500 whitespace-nowrap">{new Date(m.criado_em).toLocaleString('pt-BR')}</span> },
+    { header: 'Origem', hideBelow: 'md', sortAccessor: (m) => m.origem_tipo, cell: (m) => <span className="text-muted-foreground">{m.origem_tipo || '—'}</span> },
+    { header: 'Data', hideBelow: 'sm', sortAccessor: (m) => new Date(m.criado_em).getTime(), cell: (m) => <span className="text-muted-foreground whitespace-nowrap">{new Date(m.criado_em).toLocaleString('pt-BR')}</span> },
   ]
 
   const colunasAjuste: Column<Ajuste>[] = [
-    { header: 'Entrada', align: 'right', sortAccessor: (a) => a.qtd_entrada, cell: (a) => a.qtd_entrada > 0 ? <span className="text-green-700 font-semibold font-mono">+{a.qtd_entrada}</span> : <span className="text-gray-300">—</span> },
-    { header: 'Saída', align: 'right', sortAccessor: (a) => a.qtd_saida, cell: (a) => a.qtd_saida > 0 ? <span className="text-red-700 font-semibold font-mono">-{a.qtd_saida}</span> : <span className="text-gray-300">—</span> },
-    { header: 'Motivo', sortAccessor: (a) => a.motivo, cell: (a) => <span className="text-gray-700">{a.motivo}</span> },
-    { header: 'Data', hideBelow: 'sm', sortAccessor: (a) => new Date(a.criado_em).getTime(), cell: (a) => <span className="text-gray-500 whitespace-nowrap">{new Date(a.criado_em).toLocaleString('pt-BR')}</span> },
+    { header: 'Entrada', align: 'right', sortAccessor: (a) => a.qtd_entrada, cell: (a) => a.qtd_entrada > 0 ? <span className="text-green-700 font-semibold font-mono">+{a.qtd_entrada}</span> : <span className="text-muted-foreground/40">—</span> },
+    { header: 'Saída', align: 'right', sortAccessor: (a) => a.qtd_saida, cell: (a) => a.qtd_saida > 0 ? <span className="text-destructive font-semibold font-mono">-{a.qtd_saida}</span> : <span className="text-muted-foreground/40">—</span> },
+    { header: 'Motivo', sortAccessor: (a) => a.motivo, cell: (a) => <span className="text-foreground">{a.motivo}</span> },
+    { header: 'Data', hideBelow: 'sm', sortAccessor: (a) => new Date(a.criado_em).getTime(), cell: (a) => <span className="text-muted-foreground whitespace-nowrap">{new Date(a.criado_em).toLocaleString('pt-BR')}</span> },
   ]
 
   return (
@@ -172,7 +172,7 @@ export default function AjustesEstoquePage() {
       }
     >
       {/* Seleção de produto */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-card rounded-lg border border-border p-4">
         <Field label="Produto">
           <select value={produtoSel} onChange={e => setProdutoSel(e.target.value)} className={inputClasses()}>
             <option value="">— selecione um produto —</option>
@@ -185,10 +185,10 @@ export default function AjustesEstoquePage() {
         </Field>
 
         {produtoAtual && (
-          <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
+          <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
             <span>
               Saldo atual:{' '}
-              <strong className={produtoAtual.estoque_atual === 0 ? 'text-red-600' : 'text-gray-900'}>
+              <strong className={produtoAtual.estoque_atual === 0 ? 'text-destructive' : 'text-foreground'}>
                 {produtoAtual.estoque_atual}
               </strong>
             </span>
@@ -202,14 +202,14 @@ export default function AjustesEstoquePage() {
       {produtoSel ? (
         <>
           {/* Abas */}
-          <div className="flex gap-1 border-b border-gray-200">
+          <div className="flex gap-1 border-b border-border">
             {(['movimentacoes', 'ajustes'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setAba(tab)}
                 className={cn(
                   'px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors',
-                  aba === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700',
+                  aba === tab ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >
                 {tab === 'movimentacoes' ? 'Razão / Movimentações' : 'Ajustes Manuais'}
@@ -217,7 +217,7 @@ export default function AjustesEstoquePage() {
             ))}
           </div>
 
-          {erro && <p className="text-sm text-red-600">{erro}</p>}
+          {erro && <p role="alert" className="text-sm text-destructive">{erro}</p>}
 
           {aba === 'movimentacoes' ? (
             <DataTable
@@ -257,7 +257,7 @@ export default function AjustesEstoquePage() {
           )}
         </>
       ) : (
-        <div className="text-center text-gray-400 text-sm py-16">
+        <div className="text-center text-muted-foreground text-sm py-16">
           Selecione um produto para ver o histórico ou lançar um ajuste.
         </div>
       )}
@@ -265,18 +265,18 @@ export default function AjustesEstoquePage() {
       {modalAberto && (
         <Modal title="Novo Ajuste de Estoque" onClose={() => setModalAberto(false)} maxWidth="max-w-md">
           <form onSubmit={salvarAjuste} className="px-6 py-4 space-y-4">
-            {erroModal && <p className="text-sm text-red-600">{erroModal}</p>}
+            {erroModal && <p role="alert" className="text-sm text-destructive">{erroModal}</p>}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Produto</label>
-              <p className="text-sm text-gray-900 font-medium">
+              <label className="block text-sm font-medium text-foreground mb-1">Produto</label>
+              <p className="text-sm text-foreground font-medium">
                 {produtoAtual?.descricao}{produtoAtual?.modelo ? ` — ${produtoAtual.modelo}` : ''}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">Saldo atual: {produtoAtual?.estoque_atual ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Saldo atual: {produtoAtual?.estoque_atual ?? 0}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Ajuste *</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Tipo de Ajuste *</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="tipo" value="entrada" checked={tipoAjuste === 'entrada'} onChange={() => setTipoAjuste('entrada')} />
@@ -284,7 +284,7 @@ export default function AjustesEstoquePage() {
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="tipo" value="saida" checked={tipoAjuste === 'saida'} onChange={() => setTipoAjuste('saida')} />
-                  <span className="text-sm text-red-700 font-medium">Saída (diminui)</span>
+                  <span className="text-sm text-destructive font-medium">Saída (diminui)</span>
                 </label>
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function AjustesEstoquePage() {
                 placeholder="Ex.: 10"
               />
               {quantidade && parseInt(quantidade, 10) > 0 && (
-                <p className={`text-xs mt-1 font-medium ${tipoAjuste === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-xs mt-1 font-medium ${tipoAjuste === 'entrada' ? 'text-green-700 dark:text-green-400' : 'text-destructive'}`}>
                   Novo saldo: {(produtoAtual?.estoque_atual ?? 0) + (tipoAjuste === 'entrada' ? 1 : -1) * parseInt(quantidade, 10)}
                 </p>
               )}

@@ -38,15 +38,15 @@ function MetricCard({ title, value, trend, icon: Icon, className, loading }: Met
           {loading ? (
             <div className="h-8 w-24 bg-muted animate-pulse rounded" />
           ) : (
-            <h3 className="text-2xl font-extrabold tracking-tight font-mono text-foreground leading-none">{value}</h3>
+            <div className="text-2xl font-extrabold tracking-tight font-mono text-foreground leading-none">{value}</div>
           )}
-          <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-tighter opacity-70">Desempenho Geral</p>
+          <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase tracking-tighter">Desempenho Geral</p>
         </div>
         {!loading && trend && (
           <div className={cn(
             'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0',
             trend.positive
-              ? 'bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400'
+              ? 'bg-green-500/10 text-green-800 border-green-500/20 dark:text-green-400'
               : 'bg-destructive/10 text-destructive border-destructive/20'
           )}>
             <TrendingUp className={cn('w-3 h-3', !trend.positive && 'rotate-180')} />
@@ -137,7 +137,7 @@ export default function DashboardPage() {
             <BarChart2 className="w-8 h-8" />
           </div>
           <div className="space-y-1 relative">
-            <h4 className="font-bold text-foreground text-sm uppercase tracking-widest leading-none">Análise de Performance</h4>
+            <h2 className="font-bold text-foreground text-sm uppercase tracking-widest leading-none">Análise de Performance</h2>
             <p className="text-xs text-muted-foreground max-w-xs">Gráficos de vendas e lucratividade serão integrados na próxima versão.</p>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
             <TrendingUp className="w-8 h-8" />
           </div>
           <div className="space-y-1 relative">
-            <h4 className="font-bold text-foreground text-sm uppercase tracking-widest leading-none">Metas de Vendas</h4>
+            <h2 className="font-bold text-foreground text-sm uppercase tracking-widest leading-none">Metas de Vendas</h2>
             <p className="text-xs text-muted-foreground max-w-xs">Acompanhamento de objetivos e comissões em desenvolvimento.</p>
           </div>
         </div>

@@ -90,7 +90,7 @@ export default function CategoriasPage() {
       header: '',
       align: 'right',
       cell: (c) => (
-        <button onClick={() => abrirEditar(c)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" title="Editar">
+        <button onClick={() => abrirEditar(c)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" aria-label="Editar" title="Editar">
           <Pencil className="w-4 h-4" />
         </button>
       ),
@@ -120,7 +120,7 @@ export default function CategoriasPage() {
         <Button type="submit" variant="secondary" className="px-8 h-10">Pesquisar</Button>
       </form>
 
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -155,7 +155,7 @@ export default function CategoriasPage() {
       {modalAberto && (
         <Modal title={editando ? 'Editar Categoria' : 'Nova Categoria'} onClose={() => setModalAberto(false)} maxWidth="max-w-md">
           <form onSubmit={salvar} className="px-6 py-4 space-y-4">
-            {erroModal && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroModal}</p>}
+            {erroModal && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroModal}</p>}
             <Field label="Descrição *">
               <input
                 type="text"

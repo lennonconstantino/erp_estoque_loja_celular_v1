@@ -66,7 +66,10 @@ r.With(auth.Authenticate, auth.RequirePerm("vendas:write")).
 
 ## Boas práticas adotadas
 
-- `JWT_SECRET` via env; **trocar** o seed `admin123` em produção.
+- `JWT_SECRET` via env; **trocar** o seed `admin123` em produção. Com
+  `APP_ENV=production` a aplicação **se recusa a subir** (`Config.Validate()` →
+  `log.Fatal`) se `JWT_SECRET`/`DATABASE_URL` estiverem vazios ou usando o default
+  inseguro de dev — fail-closed contra deploy sem segredo configurado.
 - `citext` para e-mails (login case-insensitive).
 - Princípio do menor privilégio: rotas sempre exigem permissão específica.
 - Refresh com rotação + revogação; auditoria via `created_at`/`updated_at`.

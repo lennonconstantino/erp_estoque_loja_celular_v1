@@ -54,8 +54,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto py-2">
-        <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest px-3 mb-2">Principal</div>
+      <nav aria-label="Navegação principal" className="flex-1 px-4 space-y-1 overflow-y-auto py-2">
+        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2">Principal</div>
         {menuItems.slice(0, 1).map((item) => (
           <NavLink
             key={item.path}
@@ -74,7 +74,7 @@ export function Sidebar() {
           </NavLink>
         ))}
 
-        <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest px-3 mt-6 mb-2">Gestão</div>
+        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 mt-6 mb-2">Gestão</div>
         {menuItems.slice(1).map((item) => (
           <NavLink
             key={item.path}

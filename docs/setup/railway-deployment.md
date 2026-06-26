@@ -72,6 +72,11 @@ CEP_API_URL=https://viacep.com.br/ws
 
 > `APP_PORT` não é necessário — o Railway injeta `PORT` automaticamente. O servidor Go deve ler `PORT` (ou fallback para `8080`).
 
+> **Fail-closed:** com `APP_ENV=production` o backend **aborta no boot** se `JWT_SECRET`
+> ou `DATABASE_URL` estiverem vazios ou no default inseguro de dev. Se o serviço entrar
+> em crash-loop logo ao subir, confira o log `configuração inválida: ...` — quase sempre
+> é uma dessas variáveis faltando. Gere o `JWT_SECRET` com `openssl rand -base64 64 | tr -d '\n'`.
+
 5. Em **Settings** → **Deploy**, defina o **pre-deploy command**:
 
 ```bash

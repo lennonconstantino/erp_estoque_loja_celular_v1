@@ -35,6 +35,7 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | [API REST](reference/api.md) | Endpoints por módulo |
 | [Segurança](reference/security.md) | Autenticação JWT e autorização RBAC |
 | [Checklist de Segurança](reference/checklist.md) | Gate de revisão pré-deploy adaptado à stack |
+| [Design System](reference/design-system.md) | Kit de UI, tokens/tema, paleta + contraste e baseline de acessibilidade |
 
 ## Setup
 

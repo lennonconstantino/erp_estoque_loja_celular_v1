@@ -33,6 +33,12 @@ export function PageShell({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20">
+      <a
+        href="#conteudo-principal"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow-lg"
+      >
+        Pular para o conteúdo
+      </a>
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -68,7 +74,7 @@ export function PageShell({
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-10 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+        <main id="conteudo-principal" tabIndex={-1} className="flex-1 p-6 lg:p-10 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent focus:outline-none">
           <div className={cn('mx-auto space-y-8', maxWidth)}>
             <div className="space-y-1 animate-in fade-in slide-in-from-top-4 duration-700">
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>

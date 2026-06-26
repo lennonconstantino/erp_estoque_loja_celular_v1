@@ -3,11 +3,19 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
+)
+
+// Defaults de DESENVOLVIMENTO embutidos. São aceitáveis localmente, mas inseguros
+// em produção — Validate() recusa subir se algum deles vazar para APP_ENV=production.
+const (
+	devJWTSecret   = "__INSECURE_DEV_JWT_SECRET__"
+	devDatabaseURL = "postgres://erp@localhost:5432/erp_estoque?sslmode=disable"
 )
 
 // Config agrega todos os parâmetros de execução do serviço.
@@ -38,8 +46,8 @@ func Load() *Config {
 		// PORT é injetado por plataformas como o Railway e tem precedência;
 		// APP_PORT é o override local; 8080 é o fallback de desenvolvimento.
 		AppPort:      getenv("PORT", getenv("APP_PORT", "8080")),
-		DatabaseURL:  getenv("DATABASE_URL", "postgres://erp@localhost:5432/erp_estoque?sslmode=disable"),
-		JWTSecret:     getenv("JWT_SECRET", "__INSECURE_DEV_JWT_SECRET__"),
+		DatabaseURL:  getenv("DATABASE_URL", devDatabaseURL),
+		JWTSecret:     getenv("JWT_SECRET", devJWTSecret),
 		JWTAccessTTL:  getdur("JWT_ACCESS_TTL", 15*time.Minute),
 		JWTRefreshTTL: getdur("JWT_REFRESH_TTL", 720*time.Hour),
 		CepAPIURL:     getenv("CEP_API_URL", "https://viacep.com.br/ws"),
@@ -48,6 +56,29 @@ func Load() *Config {
 		ServiceName:  getenv("OTEL_SERVICE_NAME", "erp-api"),
 		OTLPEndpoint: getenv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
 	}
+}
+
+// Validate aplica o princípio fail-closed: em produção (APP_ENV=production) o
+// serviço NÃO deve subir com segredos ausentes ou usando os defaults inseguros de
+// desenvolvimento. Um JWT_SECRET vazio/sentinela permitiria forjar tokens (o secret
+// de dev está versionado no repositório); um DATABASE_URL default apontaria para um
+// banco local inexistente. Em desenvolvimento os defaults seguem permitidos.
+func (c *Config) Validate() error {
+	if !strings.EqualFold(c.AppEnv, "production") {
+		return nil
+	}
+
+	var invalidas []string
+	if c.JWTSecret == "" || c.JWTSecret == devJWTSecret {
+		invalidas = append(invalidas, "JWT_SECRET")
+	}
+	if c.DatabaseURL == "" || c.DatabaseURL == devDatabaseURL {
+		invalidas = append(invalidas, "DATABASE_URL")
+	}
+	if len(invalidas) > 0 {
+		return fmt.Errorf("config: variáveis obrigatórias ausentes ou com default inseguro em produção: %s", strings.Join(invalidas, ", "))
+	}
+	return nil
 }
 
 func getenv(key, def string) string {

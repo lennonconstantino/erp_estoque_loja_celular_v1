@@ -37,14 +37,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">ERP Estoque</h1>
-        <p className="text-sm text-gray-500 mb-6">Loja de Acessórios de Celular</p>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm bg-card rounded-lg shadow-sm border border-border p-8">
+        <h1 className="text-xl font-semibold text-foreground mb-1">ERP Estoque</h1>
+        <p className="text-sm text-muted-foreground mb-6">Loja de Acessórios de Celular</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
               E-mail
             </label>
             <input
@@ -54,12 +54,12 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             />
           </div>
 
           <div>
-            <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="senha" className="block text-sm font-medium text-foreground mb-1">
               Senha
             </label>
             <input
@@ -69,16 +69,16 @@ export default function LoginPage() {
               required
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             />
           </div>
 
-          {erro && <p className="text-sm text-red-600">{erro}</p>}
+          {erro && <p role="alert" className="text-sm text-destructive">{erro}</p>}
 
           <button
             type="submit"
             disabled={carregando}
-            className="w-full bg-gray-900 text-white rounded-md py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           >
             {carregando ? 'Entrando…' : 'Entrar'}
           </button>

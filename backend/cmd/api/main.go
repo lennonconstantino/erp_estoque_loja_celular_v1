@@ -31,6 +31,11 @@ import (
 
 func main() {
 	cfg := config.Load()
+	// Fail-closed: em produção recusa subir com segredos ausentes/inseguros
+	// (ex.: JWT_SECRET vazio cairia no sentinela de dev versionado no repo).
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("configuração inválida: %v", err)
+	}
 
 	ctx := context.Background()
 	pool, err := database.NewPool(ctx, cfg.DatabaseURL)

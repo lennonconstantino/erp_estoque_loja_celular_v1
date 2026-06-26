@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export function Field({
@@ -10,12 +10,25 @@ export function Field({
   children: ReactNode
   disabled?: boolean
 }) {
+  const autoId = useId()
+  // Associa o rótulo ao controle: reaproveita um `id` já existente no filho
+  // ou injeta um gerado, garantindo `htmlFor`/`id` casados (WCAG 1.3.1/3.3.2).
+  let controlId = autoId
+  let control = children
+  if (isValidElement(children)) {
+    const child = children as ReactElement<{ id?: string }>
+    controlId = child.props.id ?? autoId
+    if (!child.props.id) {
+      control = cloneElement(child, { id: controlId })
+    }
+  }
+
   return (
     <div className="space-y-1.5">
-      <label className={cn('block text-[10px] font-bold uppercase tracking-widest ml-1', disabled ? 'text-muted-foreground/50' : 'text-muted-foreground')}>
+      <label htmlFor={controlId} className={cn('block text-[10px] font-bold uppercase tracking-widest ml-1', disabled ? 'text-muted-foreground/50' : 'text-muted-foreground')}>
         {label}
       </label>
-      {children}
+      {control}
     </div>
   )
 }

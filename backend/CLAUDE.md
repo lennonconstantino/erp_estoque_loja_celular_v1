@@ -63,3 +63,5 @@ Migrations em `migrations/`, pares `NNNNNN_nome.up.sql`/`.down.sql` (golang-migr
 ## Config
 
 `config.Load()` lê `.env` (opcional) e env vars com defaults de desenvolvimento embutidos. Toda nova configuração entra na struct `Config` e é lida via `getenv`/`getdur`.
+
+`Config.Validate()` aplica **fail-closed em produção**: com `APP_ENV=production`, `cmd/api/main.go` aborta (`log.Fatal`) se `JWT_SECRET`/`DATABASE_URL` estiverem vazios ou usando o default inseguro de dev (`devJWTSecret`/`devDatabaseURL`) — evita assinar JWT com o sentinela versionado no repo. Fora de produção os defaults seguem permitidos. Segredo novo que seja crítico em produção deve entrar nessa checagem.

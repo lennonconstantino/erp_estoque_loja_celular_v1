@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 export type BadgeTone = 'success' | 'neutral' | 'warning' | 'danger'
 
 const tones: Record<BadgeTone, string> = {
-  success: 'bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400 dark:bg-green-400/10',
+  success: 'bg-green-500/10 text-green-800 border-green-500/20 dark:text-green-400 dark:bg-green-400/10',
   neutral: 'bg-muted/50 text-muted-foreground border-border',
   warning: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20 dark:text-yellow-400 dark:bg-yellow-400/10',
   danger: 'bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/10',

@@ -17,7 +17,7 @@
     --secondary: 220 14% 96%;
     --secondary-foreground: 225 12% 7%;
     --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 18% 42%;
     --accent: 220 14% 96%;
     --accent-foreground: 225 12% 7%;
     --destructive: 0 84% 60%;
@@ -62,5 +62,17 @@
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Respeita a preferência de movimento reduzido (WCAG 2.3.3). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

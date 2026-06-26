@@ -208,7 +208,7 @@ export default function FornecedoresPage() {
       header: '',
       align: 'right',
       cell: (f) => (
-        <button onClick={() => abrirEditar(f)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" title="Editar">
+        <button onClick={() => abrirEditar(f)} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted active:scale-90" aria-label="Editar" title="Editar">
           <Pencil className="w-4 h-4" />
         </button>
       ),
@@ -240,7 +240,7 @@ export default function FornecedoresPage() {
         </form>
       </div>
 
-      {erro && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
+      {erro && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erro}</p>}
 
       <DataTable
         columns={colunas}
@@ -416,7 +416,7 @@ export default function FornecedoresPage() {
               </label>
             )}
 
-            {erroForm && <p className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
+            {erroForm && <p role="alert" className="text-xs text-destructive font-bold bg-destructive/10 border border-destructive/20 rounded-full px-4 py-2 w-fit uppercase tracking-wider">{erroForm}</p>}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button type="button" variant="secondary" onClick={fecharModal}>Cancelar</Button>
