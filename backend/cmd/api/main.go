@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/catalogo"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/clientes"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/fornecedores"
 	"github.com/lennonconstantino/erp_estoque_loja_celular/backend/internal/modules/iam"
@@ -58,6 +59,7 @@ func main() {
 	iamMod := iam.New(pool, authMgr, cfg.JWTRefreshTTL)
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
 	fornecedoresMod := fornecedores.New(pool, authMgr, cfg.CepAPIURL)
+	catalogoMod := catalogo.New(pool, authMgr)
 
 	r := httpserver.NewRouter()
 	r.Handle("/metrics", obs.MetricsHandler)
@@ -65,6 +67,8 @@ func main() {
 		api.Mount("/", iamMod.Router())
 		api.Mount("/clientes", clientesMod.Router())
 		api.Mount("/fornecedores", fornecedoresMod.Router())
+		api.Mount("/categorias", catalogoMod.CategoriasRouter())
+		api.Mount("/produtos", catalogoMod.ProdutosRouter())
 		// ... demais módulos
 	})
 

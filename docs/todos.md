@@ -80,22 +80,22 @@ camada `lib/` do frontend pronta, `LoginPage` e `DashboardPage` existem.
 
 ### Backend
 
-- [ ] Criar `internal/modules/catalogo/domain/` — entidades `Categoria`, `Produto` (invariante: `custo < venda`), erros
-- [ ] Criar `ports/inbound.go` — `CategoriaService`, `ProdutoService`
-- [ ] Criar `ports/outbound.go` — `CategoriaRepository`, `ProdutoRepository`, `EstoqueReader` (porta de saída, implementada por `estoque`)
-- [ ] Criar `application/service.go` — CRUD + cálculo de margem
-- [ ] Criar `adapters/outbound/postgres/` — repos de categoria e produto
-- [ ] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `catalogo:read`, `catalogo:write`
-- [ ] Criar `module.go` e montar em `main.go`
-- [ ] Expor interface `CatalogoReader` (usada por compras/vendas) e `CatalogoWriter` (usada por estoque)
-- [ ] Testar: `CHECK p_custo < p_venda` rejeita produto inválido; saldo começa em 0
+- [x] Criar `internal/modules/catalogo/domain/` — entidades `Categoria`, `Produto` (invariante: `custo < venda`), erros
+- [x] Criar `ports/inbound.go` — `CategoriaService`, `ProdutoService`
+- [x] Criar `ports/outbound.go` — `CategoriaRepository`, `ProdutoRepository`, `EstoqueReader` (porta de saída, implementada por `estoque`)
+- [x] Criar `application/service.go` — CRUD + cálculo de margem
+- [x] Criar `adapters/outbound/postgres/` — repos de categoria e produto
+- [x] Criar `adapters/inbound/http/handler.go` + `router.go` — RBAC: `catalogo:read`, `catalogo:write`
+- [x] Criar `module.go` e montar em `main.go`
+- [x] Expor interface `CatalogoReader` (usada por compras/vendas) e `CatalogoWriter` (usada por estoque)
+- [x] Testar: `CHECK p_custo < p_venda` rejeita produto inválido; saldo começa em 0
 
 ### Frontend
 
-- [ ] Criar `pages/CategoriasPage.tsx` — listagem + modal de cadastro/edição
-- [ ] Criar `pages/ProdutosPage.tsx` — listagem com saldo atual e indicador de mínimo
-- [ ] Formulário de produto: custo, venda, margem calculada em tempo real, estoque mínimo
-- [ ] Integrar com API (`GET /categorias`, `GET /produtos`, `POST`, `PUT`)
+- [x] Criar `pages/CategoriasPage.tsx` — listagem + modal de cadastro/edição
+- [x] Criar `pages/ProdutosPage.tsx` — listagem com saldo atual e indicador de mínimo
+- [x] Formulário de produto: custo, venda, margem calculada em tempo real, estoque mínimo
+- [x] Integrar com API (`GET /categorias`, `GET /produtos`, `POST`, `PUT`)
 
 ---
 

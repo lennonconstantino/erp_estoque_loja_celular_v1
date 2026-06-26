@@ -3,6 +3,8 @@ import { getRefreshToken, isAuthenticated } from '@/lib/auth'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import FornecedoresPage from '@/pages/FornecedoresPage'
+import CategoriasPage from '@/pages/CategoriasPage'
+import ProdutosPage from '@/pages/ProdutosPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const hasSession = isAuthenticated() || getRefreshToken() !== null
@@ -19,6 +21,22 @@ export default function App() {
           element={
             <PrivateRoute>
               <FornecedoresPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/categorias"
+          element={
+            <PrivateRoute>
+              <CategoriasPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/produtos"
+          element={
+            <PrivateRoute>
+              <ProdutosPage />
             </PrivateRoute>
           }
         />
