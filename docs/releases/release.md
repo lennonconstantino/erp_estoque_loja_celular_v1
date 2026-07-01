@@ -3,6 +3,12 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.0] — 2026-07-01
+
+Integração Railway ↔ GitHub ativa: branch `production` tracado, auto-deploy com
+Wait for CI ligado nos dois serviços. Fluxo: merge em `main` → CI verde →
+`promote-production.yml` → Railway deploya.
+
 ## [1.3.0] — 2026-07-01
 
 Esteira de CI/CD (GitHub Actions como gate + auto-deploy nativo do Railway).
