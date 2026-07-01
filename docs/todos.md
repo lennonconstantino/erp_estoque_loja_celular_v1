@@ -319,12 +319,16 @@ resta a Fase 9 — deploy).
 
 ## Critério de Aceitação (conforme brief do cliente)
 
-- [ ] Receber mercadoria → registrar compra → saldo atualizado automaticamente
-- [ ] Atender cliente → registrar venda → saldo baixado → documento fiscal emitido
-- [ ] Identificar ruptura → relatório de produtos abaixo do mínimo
-- [ ] Lançar ajuste com motivo → registro imutável no histórico
-- [ ] Emitir relatório de vendas e compras do período
-- [ ] Operação de um dia completo sem planilha, sem saldo negativo, sem erro fiscal
+> Validado em **produção** (Railway + Supabase) em 2026-07-01 com um ciclo real
+> sobre o produto "Cabo USB-C 2m 3A Trançado" (saldo 30 → compra +8 → 38 →
+> venda −3 → 35 → ajuste saída −1 → 34).
+
+- [x] Receber mercadoria → registrar compra → saldo atualizado automaticamente (compra qtd 8 CONFIRMADA; saldo 30→38)
+- [x] Atender cliente → registrar venda → saldo baixado → documento fiscal emitido (venda qtd 3 CONFIRMADA; saldo 38→35; cupom `CUP-20260701-6285`)
+- [x] Identificar ruptura → relatório de produtos abaixo do mínimo (endpoint 200; produto acima do mínimo não aparece, como esperado)
+- [x] Lançar ajuste com motivo → registro imutável no histórico (ledger `AJUSTE_SAIDA` 35→34, `origem_tipo=AJUSTE`, append-only)
+- [x] Emitir relatório de vendas e compras do período (vendas 2026-07-01: 1 venda R$ 104,70; compras 2026-06-30: 1 compra R$ 72,00)
+- [x] Operação de um dia completo sem planilha, sem saldo negativo, sem erro fiscal (ciclo compra→venda→ajuste→relatório sem erros)
 
 ---
 
