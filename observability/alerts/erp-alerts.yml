@@ -1,0 +1,75 @@
+# =============================================================================
+# Regras de alerta do ERP (formato Prometheus).
+#
+# Onde rodam:
+#   - Local: carregadas pelo Prometheus via `rule_files` (ver
+#     observability/prometheus/prometheus.yml). Sem Alertmanager configurado, o
+#     Prometheus só mostra o estado (pending/firing) na UI — roteamento de
+#     notificação entra depois (decisão registrada em
+#     docs/architecture/observability.md).
+#   - Grafana Cloud: suba com `mimirtool rules load observability/alerts/erp-alerts.yml`
+#     (Mimir ruler) — as notificações saem pelo contact point do Grafana.
+#
+# Todas as expressões usam APENAS métricas realmente exportadas hoje:
+#   - `up` / `absent(up)`        → gerado pelo scraper (Alloy/Prometheus).
+#   - `http_server_request_duration_seconds_*` → otelhttp (labels reais:
+#     http_response_status_code, http_request_method).
+# Alertas de circuit breaker aberto e de erros de conexão com o banco NÃO estão
+# aqui de propósito: hoje resilience/ e database/ não emitem métricas próprias
+# (só o middleware HTTP e o runtime Go). Falha de banco/gateway aparece como 5xx,
+# então ERPHighErrorRate cobre o sintoma. Para alertar na causa raiz é preciso
+# instrumentar esses pacotes (trabalho futuro; ver docs/architecture/observability.md).
+# =============================================================================
+groups:
+  - name: erp-api
+    rules:
+      # 1. Backend fora do ar — o alvo responde mas o scrape falha (processo caiu,
+      #    container reiniciando, porta errada).
+      - alert: ERPBackendDown
+        expr: up{job="erp-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend do ERP fora do ar (job erp-api)"
+          description: "O scrape de {{ $labels.instance }} falha há mais de 2min. API provavelmente indisponível."
+
+      # 2. Alvo sumiu — nenhuma série `up` para o job (Alloy não consegue nem
+      #    resolver/alcançar o backend, ou o próprio Alloy caiu). Complementa (1).
+      - alert: ERPBackendUnreachable
+        expr: absent(up{job="erp-api"})
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sem métricas do backend do ERP há 5min"
+          description: "Nenhuma série up{job=\"erp-api\"} — o scraper (Alloy) não está alcançando o /metrics ou parou."
+
+      # 3. Taxa de erro 5xx alta — inclui falhas de banco/pooler e gateway fiscal,
+      #    que se manifestam como 500. NaN quando não há tráfego (não dispara à toa).
+      - alert: ERPHighErrorRate
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{job="erp-api",http_response_status_code=~"5.."}[5m]))
+            /
+          sum(rate(http_server_request_duration_seconds_count{job="erp-api"}[5m]))
+            > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taxa de 5xx acima de 5% no ERP"
+          description: "Mais de 5% das requisições retornam 5xx nos últimos 5min. Verifique banco (Session Pooler do Supabase), gateway fiscal e logs."
+
+      # 4. Latência alta — p99 acima de 1s por 10min. Sinaliza saturação (pool de
+      #    conexões, dependência externa lenta) antes de virar erro.
+      - alert: ERPHighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket{job="erp-api"}[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência p99 do ERP acima de 1s"
+          description: "O p99 de latência HTTP passou de 1s por 10min. Investigue banco/pooler e gateways externos."

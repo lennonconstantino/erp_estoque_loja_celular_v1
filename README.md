@@ -293,6 +293,7 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 - [database-migrations.md](docs/setup/database-migrations.md) — inicialização, migrations e seed
 - [frontend-setup.md](docs/setup/frontend-setup.md) — convenções da SPA React, stack e variáveis
 - [railway-deployment.md](docs/setup/railway-deployment.md) — deploy no Railway (backend e frontend)
+- [observability-activation.md](docs/setup/observability-activation.md) — ativar métricas em produção (Alloy → Grafana Cloud + alertas)
 
 ### Runbooks — [`docs/runbooks/`](docs/runbooks/)
 

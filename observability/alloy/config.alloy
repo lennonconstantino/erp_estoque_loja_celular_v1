@@ -1,0 +1,58 @@
+// =============================================================================
+// Grafana Alloy — coleta o /metrics do backend do ERP e faz remote_write para o
+// Grafana Cloud (modelo PUSH gerenciado; nada de Prometheus/Grafana stateful no
+// Railway). Sintaxe Alloy (River). Valide localmente com:
+//
+//   alloy fmt observability/alloy/config.alloy
+//   alloy run --stability.level=generally-available observability/alloy/config.alloy
+//
+// Como rodar no Railway:
+//   1. Novo serviço a partir da imagem  grafana/alloy:latest.
+//   2. Suba este arquivo (repo ou config map) e aponte o command para ele:
+//        run --server.http.listen-addr=0.0.0.0:$PORT /etc/alloy/config.alloy
+//   3. Defina as variáveis de ambiente abaixo no serviço do Alloy.
+//
+// Variáveis de ambiente esperadas (no serviço do Alloy, NÃO no backend):
+//   ERP_METRICS_ADDR     host:porta interno do backend no Railway. O backend
+//                        escuta no $PORT que o Railway injeta (não é fixo 8080),
+//                        então use as variáveis de referência do Railway:
+//                          ${{erp-estoque-backend.RAILWAY_PRIVATE_DOMAIN}}:${{erp-estoque-backend.PORT}}
+//   ERP_METRICS_TOKEN    o MESMO valor de METRICS_TOKEN configurado no backend.
+//   GRAFANA_CLOUD_URL    endpoint remote_write do Prometheus no Grafana Cloud.
+//                        Ex.: "https://prometheus-prod-XX.grafana.net/api/prom/push"
+//   GRAFANA_CLOUD_USER   instance ID numérico do stack (Grafana Cloud → Details).
+//   GRAFANA_CLOUD_TOKEN  Cloud Access Policy token com escopo metrics:write.
+// =============================================================================
+
+// Raspa o /metrics do backend, autenticando com o mesmo token do METRICS_TOKEN.
+prometheus.scrape "erp_api" {
+	targets = [{
+		__address__ = sys.env("ERP_METRICS_ADDR"),
+	}]
+	job_name        = "erp-api"
+	scheme          = "http" // rede privada do Railway (.railway.internal) é interna
+	metrics_path    = "/metrics"
+	scrape_interval = "30s"
+
+	// Envia "Authorization: Bearer <token>" — casa com httpserver.ProtectMetrics.
+	bearer_token = sys.env("ERP_METRICS_TOKEN")
+
+	forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// Encaminha as amostras para o Grafana Cloud (retenção e dashboards gerenciados).
+prometheus.remote_write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_URL")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_USER")
+			password = sys.env("GRAFANA_CLOUD_TOKEN")
+		}
+	}
+
+	// external_labels ajudam a distinguir o ambiente nas queries e alertas.
+	external_labels = {
+		env = "production",
+	}
+}

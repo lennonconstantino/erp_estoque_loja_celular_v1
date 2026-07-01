@@ -20,9 +20,9 @@ const (
 
 // Config agrega todos os parâmetros de execução do serviço.
 type Config struct {
-	AppEnv       string
-	AppPort      string
-	DatabaseURL  string
+	AppEnv         string
+	AppPort        string
+	DatabaseURL    string
 	JWTSecret      string
 	JWTAccessTTL   time.Duration
 	JWTRefreshTTL  time.Duration
@@ -34,6 +34,9 @@ type Config struct {
 	// spans para um OTel Collector (fase de microsserviços).
 	ServiceName  string
 	OTLPEndpoint string
+	// MetricsToken protege o endpoint /metrics. Vazio em dev libera o scraping
+	// local; em produção, vazio fecha o endpoint (fail-safe). Ver ProtectMetrics.
+	MetricsToken string
 }
 
 // Load lê o .env (se existir) e monta a Config a partir do ambiente,
@@ -42,20 +45,28 @@ func Load() *Config {
 	_ = godotenv.Load() // ignora ausência do arquivo (produção usa env real)
 
 	return &Config{
-		AppEnv:       getenv("APP_ENV", "development"),
+		AppEnv: getenv("APP_ENV", "development"),
 		// PORT é injetado por plataformas como o Railway e tem precedência;
 		// APP_PORT é o override local; 8080 é o fallback de desenvolvimento.
-		AppPort:      getenv("PORT", getenv("APP_PORT", "8080")),
-		DatabaseURL:  getenv("DATABASE_URL", devDatabaseURL),
-		JWTSecret:     getenv("JWT_SECRET", devJWTSecret),
-		JWTAccessTTL:  getdur("JWT_ACCESS_TTL", 15*time.Minute),
-		JWTRefreshTTL: getdur("JWT_REFRESH_TTL", 720*time.Hour),
-		CepAPIURL:     getenv("CEP_API_URL", "https://viacep.com.br/ws"),
+		AppPort:        getenv("PORT", getenv("APP_PORT", "8080")),
+		DatabaseURL:    getenv("DATABASE_URL", devDatabaseURL),
+		JWTSecret:      getenv("JWT_SECRET", devJWTSecret),
+		JWTAccessTTL:   getdur("JWT_ACCESS_TTL", 15*time.Minute),
+		JWTRefreshTTL:  getdur("JWT_REFRESH_TTL", 720*time.Hour),
+		CepAPIURL:      getenv("CEP_API_URL", "https://viacep.com.br/ws"),
 		AllowedOrigins: strings.Split(getenv("ALLOWED_ORIGINS", "http://localhost:5173"), ","),
 
 		ServiceName:  getenv("OTEL_SERVICE_NAME", "erp-api"),
 		OTLPEndpoint: getenv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+		MetricsToken: getenv("METRICS_TOKEN", ""),
 	}
+}
+
+// IsProduction indica se o serviço roda em produção (APP_ENV=production),
+// centralizando a checagem usada pelo fail-closed da config e pela proteção
+// de /metrics.
+func (c *Config) IsProduction() bool {
+	return strings.EqualFold(c.AppEnv, "production")
 }
 
 // Validate aplica o princípio fail-closed: em produção (APP_ENV=production) o
@@ -64,7 +75,7 @@ func Load() *Config {
 // de dev está versionado no repositório); um DATABASE_URL default apontaria para um
 // banco local inexistente. Em desenvolvimento os defaults seguem permitidos.
 func (c *Config) Validate() error {
-	if !strings.EqualFold(c.AppEnv, "production") {
+	if !c.IsProduction() {
 		return nil
 	}
 

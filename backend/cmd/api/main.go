@@ -68,14 +68,16 @@ func main() {
 	iamMod := iam.New(pool, authMgr, cfg.JWTRefreshTTL)
 	clientesMod := clientes.New(pool, authMgr, cfg.CepAPIURL)
 	fornecedoresMod := fornecedores.New(pool, authMgr, cfg.CepAPIURL)
-	catalogoMod     := catalogo.New(pool, authMgr)
-	estoqueMod      := estoque.New(pool, authMgr, catalogoMod.Writer())
-	comprasMod      := compras.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), fornecedoresMod.Writer())
-	vendasMod       := vendas.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), clientesMod.Writer())
-	relatoriosMod   := relatorios.New(pool, authMgr)
+	catalogoMod := catalogo.New(pool, authMgr)
+	estoqueMod := estoque.New(pool, authMgr, catalogoMod.Writer())
+	comprasMod := compras.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), fornecedoresMod.Writer())
+	vendasMod := vendas.New(pool, authMgr, catalogoMod.Reader(), estoqueMod.Writer(), clientesMod.Writer())
+	relatoriosMod := relatorios.New(pool, authMgr)
 
 	r := httpserver.NewRouter(cfg.AllowedOrigins)
-	r.Handle("/metrics", obs.MetricsHandler)
+	// /metrics fica no servidor público; protegido por token (ou fechado em
+	// produção sem token). Ver httpserver.ProtectMetrics.
+	r.Handle("/metrics", httpserver.ProtectMetrics(obs.MetricsHandler, cfg.MetricsToken, cfg.IsProduction()))
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Mount("/", iamMod.Router())
 		api.Mount("/clientes", clientesMod.Router())

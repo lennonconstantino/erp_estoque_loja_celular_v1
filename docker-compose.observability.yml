@@ -22,6 +22,7 @@ services:
       - "--storage.tsdb.retention.time=15d"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts/erp-alerts.yml:/etc/prometheus/alerts/erp-alerts.yml:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
