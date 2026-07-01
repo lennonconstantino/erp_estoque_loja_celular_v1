@@ -24,7 +24,8 @@ Variáveis de ambiente:
   FF4_ENABLE   (=1 para rodar o teste de caos que para o container do banco)
 """
 import sys, os, base64, hashlib, hmac, json, time, asyncio, subprocess, statistics, pathlib
-import httpx
+# httpx é importado sob demanda dentro de FF2/FF3/FF4 (import lazy): assim a FF1
+# (análise estática) roda com stdlib puro, sem depender de pacotes externos.
 
 # scripts/fitness-functions/run_all.py → raiz do repositório
 ROOT        = pathlib.Path(__file__).resolve().parents[2]
@@ -209,6 +210,7 @@ CONTRACTS = [
 
 
 async def run_ff2() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print(f"FF2 — Contract Tests ({BASE_URL})")
     print("─" * 60)
@@ -243,6 +245,7 @@ CONCURRENCY = 5
 
 
 async def run_ff3() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print(f"FF3 — Latência p99 < {P99_LIMIT_MS}ms ({N_REQUESTS} req, concurrency={CONCURRENCY})")
     print("─" * 60)
@@ -294,6 +297,7 @@ def _docker(*args) -> subprocess.CompletedProcess:
 
 
 async def run_ff4() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print("FF4 — Chaos: degradação graciosa na queda do Postgres")
     print("─" * 60)
