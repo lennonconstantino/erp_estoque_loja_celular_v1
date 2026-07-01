@@ -166,7 +166,56 @@ em [todos.md](todos.md#critério-de-aceitação-conforme-brief-do-cliente).
 
 ---
 
-## 7. Checklist do próximo deploy (destilado)
+## 7. Lições da integração Railway ↔ GitHub (CI/CD — 2026-07-01)
+
+Gotchas encontrados ao conectar os serviços Railway ao repositório GitHub para
+auto-deploy com Wait for CI.
+
+### 7.1 "GitHub Repo not found" no campo de branch
+
+**Sintoma:** o Source Repo está conectado (mostra o repo com botão Disconnect), mas
+o campo "Branch connected to production" exibe `❌ GitHub Repo not found` e não abre
+dropdown ao clicar.
+
+**Causa:** o Railway GitHub App foi (re)autorizado mas ainda não tinha as permissões
+novas aceitas, ou o cache da sessão estava desatualizado.
+
+**Correção:** dar um **refresh na página** do Railway (F5). Se não resolver, clicar
+no link *"accepted our updated GitHub permissions"* que aparece abaixo do toggle
+"Wait for CI" — ele redireciona para o GitHub para aceitar as permissões adicionais
+do App. Após aceitar, a lista de branches carrega normalmente.
+
+### 7.2 Toggle "Wait for CI" volta para desligado
+
+**Sintoma:** liga o toggle Wait for CI, a página salva, mas ao recarregar ele volta
+para desligado.
+
+**Causa:** o Railway não consegue persistir Wait for CI sem um branch válido
+selecionado no campo "Branch connected to production".
+
+**Correção:** selecionar o branch **primeiro** (passo 1), salvar, e só depois ligar
+o Wait for CI (passo 2). A ordem importa.
+
+### 7.3 Push do GitHub Actions bot não bloqueou o deploy
+
+**Sintoma / dúvida:** a Action `promote-production.yml` empurra `main`→`production`
+usando o `GITHUB_TOKEN` do bot — o Railway iria ignorar esse push?
+
+**Resultado real:** não. O Railway detectou o push normalmente e iniciou o deploy.
+O webhook do GitHub App do Railway dispara para qualquer push no branch tracado,
+independente de quem empurrou (usuário ou bot).
+
+### 7.4 Tabela de gotchas (resumo acionável)
+
+| # | Sintoma | Causa | Correção |
+|---|---------|-------|----------|
+| 8 | "GitHub Repo not found" no campo de branch | Permissões do Railway GitHub App desatualizadas ou cache | Refresh na página; se persistir, aceitar permissões pelo link na tela |
+| 9 | Wait for CI volta para desligado após salvar | Branch não estava selecionado quando tentou salvar | Selecionar branch primeiro → salvar → ligar Wait for CI |
+| 10 | Push do bot não dispara deploy no Railway | — (não aconteceu) | Webhook do Railway App dispara para qualquer push, inclusive de bot |
+
+---
+
+## 8. Checklist do próximo deploy (destilado)
 
 - [ ] `DATABASE_URL` = **Session Pooler** (IPv4, 5432), nunca a direta nem o Transaction Pooler (6543).
 - [ ] `JWT_SECRET` longo e único (`openssl rand -base64 64`), nunca o default de dev.

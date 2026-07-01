@@ -95,6 +95,14 @@ Não versionável — configurar nos dashboards:
    push direto**; incluir o *GitHub Actions bot* no bypass para a Action de promoção
    conseguir empurrar o fast-forward.
 
+## Troubleshooting da configuração Railway
+
+| Sintoma | Causa | Solução |
+|---------|-------|---------|
+| Campo "Branch connected to production" mostra `❌ GitHub Repo not found` e não abre | Railway GitHub App sem permissões atualizadas / cache | Dar **refresh na página**; se persistir, clicar em *"accepted our updated GitHub permissions"* (link abaixo do toggle Wait for CI) |
+| Toggle "Wait for CI" volta para desligado após salvar | Branch não estava selecionado quando salvou | Selecionar o branch **primeiro**, salvar, **depois** ligar Wait for CI |
+| Push do GitHub Actions bot não dispara deploy | — (não ocorre na prática) | O webhook do Railway App dispara para qualquer push no branch tracado, inclusive de bot |
+
 ## Promoção para produção
 
 1. Actions → **Promote to production** → *Run workflow*.
