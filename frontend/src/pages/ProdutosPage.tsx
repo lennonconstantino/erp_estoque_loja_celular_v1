@@ -236,19 +236,19 @@ export default function ProdutosPage() {
       }
     >
       <div className="flex items-center gap-3 bg-card p-4 rounded-2xl border border-border shadow-sm animate-in fade-in duration-500">
-        <form onSubmit={pesquisar} className="flex flex-1 gap-3">
+        <form onSubmit={pesquisar} className="flex flex-1 flex-wrap gap-3">
           <input
             type="text"
             placeholder="Pesquisar por descrição ou modelo…"
             value={busca}
             onChange={e => setBusca(e.target.value)}
-            className={inputClasses() + ' flex-1'}
+            className={cn(inputClasses(), 'flex-1 min-w-[12rem]')}
           />
           <select
             aria-label="Filtrar por categoria"
             value={filtroCategoria}
             onChange={e => setFiltroCategoria(e.target.value)}
-            className={inputClasses() + ' w-auto hidden sm:block'}
+            className={cn(inputClasses(), 'w-auto hidden sm:block')}
           >
             <option value="">Todas as categorias</option>
             {categorias.map(c => <option key={c.id} value={c.id}>{c.descricao}</option>)}
