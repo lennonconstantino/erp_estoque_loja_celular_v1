@@ -13,10 +13,13 @@
 //   3. Defina as variáveis de ambiente abaixo no serviço do Alloy.
 //
 // Variáveis de ambiente esperadas (no serviço do Alloy, NÃO no backend):
-//   ERP_METRICS_ADDR     host:porta interno do backend no Railway. O backend
-//                        escuta no $PORT que o Railway injeta (não é fixo 8080),
-//                        então use as variáveis de referência do Railway:
-//                          ${{erp-estoque-backend.RAILWAY_PRIVATE_DOMAIN}}:${{erp-estoque-backend.PORT}}
+//   ERP_METRICS_ADDR     host:porta interno do backend no Railway. Use o domínio
+//                        privado + a porta que o backend REALMENTE escuta (veja no
+//                        deploy log: "API ouvindo em :XXXX"). Ex. com APP_PORT=8080:
+//                          erp-estoque-backend.railway.internal:8080
+//                        (ou ${{erp-estoque-backend.RAILWAY_PRIVATE_DOMAIN}}:8080).
+//                        NÃO use ${{...PORT}} se o backend não tiver a var PORT —
+//                        ele lê PORT→APP_PORT→8080, e sem PORT a referência fica vazia.
 //   ERP_METRICS_TOKEN    o MESMO valor de METRICS_TOKEN configurado no backend.
 //   GRAFANA_CLOUD_URL    endpoint remote_write do Prometheus no Grafana Cloud.
 //                        Ex.: "https://prometheus-prod-XX.grafana.net/api/prom/push"
