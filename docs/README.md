@@ -2,6 +2,9 @@
 
 Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + RBAC.
 
+> **Status:** em produção desde 2026-07-01 (Railway + Supabase). Retrospectiva da
+> subida e lições de deploy em [Lições Aprendidas](licoes-aprendidas.md).
+
 ## Brief do Cliente
 
 | Documento | Conteúdo |
@@ -52,3 +55,9 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | Documento | Conteúdo |
 |-----------|----------|
 | [CircuitBreakerOpen](runbooks/circuit-breaker.md) | Diagnóstico e resposta quando um circuit breaker abre |
+
+## Retrospectivas
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [Lições Aprendidas — Deploy Fase 9](licoes-aprendidas.md) | Topologia de produção, sequência do deploy, mapa mental e runbook dos dois bugs de provedor (IPv6/pooler e nginx `$PORT`) — com diagramas Mermaid |

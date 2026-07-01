@@ -3,6 +3,35 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.2.0] — 2026-07-01
+
+Fase 9 executada: aplicação **no ar** em produção (Railway + Supabase), com o
+ciclo de negócio validado contra o ambiente real.
+
+### Adicionado
+
+- **Deploy em produção**: backend e frontend no Railway (projeto `erp-estoque`)
+  contra Postgres no Supabase; migrations aplicadas via pre-deploy `/app/migrate up`;
+  ciclo compra→venda→ajuste→relatório verificado em produção (saldo, cupom fiscal e
+  ledger imutável conferindo). (`73f5aab`)
+- **Retrospectiva de deploy** com diagramas Mermaid (topologia, sequência, mapa
+  mental, runbook de troubleshooting): [docs/licoes-aprendidas.md](../licoes-aprendidas.md). (`73f5aab`)
+
+### Corrigido
+
+- **Frontend no Railway ficava `Failed`**: o nginx escutava fixo na porta 80, mas o
+  healthcheck do Railway bate na porta injetada em `$PORT`. O `frontend/Dockerfile`
+  passa a reescrever `listen 80;` para `$PORT` no boot (fallback 80 p/ local). (`c0d3df8`)
+
+### Alterado
+
+- **`DATABASE_URL` de produção** passa a usar a **Session pooler** do Supabase (IPv4).
+  A conexão direta (`db.<ref>.supabase.co`) é IPv6-only e o egress do Railway é IPv4,
+  causando `network is unreachable` no `migrate`. Docs de Supabase, Railway e o
+  checklist de segurança atualizados. (`c0d3df8`)
+- Removidas variáveis legadas `DB_*`/`APP_PORT` do serviço de backend (o código lê só
+  `DATABASE_URL`).
+
 ## [1.1.0] — 2026-06-26
 
 Hardening de produção, acessibilidade (WCAG) em todas as telas e polimento do
@@ -140,6 +169,7 @@ observabilidade, hardening de segredos e documentação base (anterior ao MVP).
 - Tratamento de segredos no docker-compose via interpolação de env obrigatória,
   guia de secret scanning e itens de checklist pré-deploy. (`a55d305`)
 
+[1.2.0]: #120--2026-07-01
 [1.1.0]: #110--2026-06-26
 [1.0.0]: #100--2026-06-26
 [0.1.0]: #010--2026-06-25

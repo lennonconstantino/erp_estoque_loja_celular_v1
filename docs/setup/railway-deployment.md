@@ -62,13 +62,18 @@ Use este caminho se preferir configurar pelo painel.
 
 ```text
 APP_ENV=production
-DATABASE_URL=postgres://postgres:[senha]@db.[ref].supabase.co:5432/postgres?sslmode=require
+DATABASE_URL=postgres://postgres.[ref]:[senha]@aws-1-[região].pooler.supabase.com:5432/postgres?sslmode=require
 JWT_SECRET=segredo-longo-e-aleatorio-para-producao
 JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=720h
 ALLOWED_ORIGINS=http://localhost:5173
 CEP_API_URL=https://viacep.com.br/ws
 ```
+
+> **`DATABASE_URL` = Session pooler (IPv4).** Use a connection string da **Session pooler**
+> do Supabase (`aws-1-<região>.pooler.supabase.com:5432`, user `postgres.<ref>`), **não** a
+> conexão direta `db.<ref>.supabase.co` — esta é IPv6-only e o Railway é IPv4, o que faz o
+> `migrate` falhar com `network is unreachable`. Ver [supabase-setup.md](supabase-setup.md#qual-connection-string-usar--e-por-quê-lição-do-deploy-no-railway).
 
 > `APP_PORT` não é necessário — o Railway injeta `PORT` automaticamente. O servidor Go deve ler `PORT` (ou fallback para `8080`).
 
@@ -139,7 +144,7 @@ railway add --service erp-estoque-frontend --json
 ```bash
 railway variable set \
   APP_ENV=production \
-  DATABASE_URL=postgres://postgres:[senha]@db.[ref].supabase.co:5432/postgres?sslmode=require \
+  DATABASE_URL=postgres://postgres.[ref]:[senha]@aws-1-[região].pooler.supabase.com:5432/postgres?sslmode=require \
   JWT_ACCESS_TTL=15m \
   JWT_REFRESH_TTL=720h \
   CEP_API_URL=https://viacep.com.br/ws \

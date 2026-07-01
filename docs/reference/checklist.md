@@ -219,7 +219,7 @@ Marque antes de cada deploy:
 - [ ] `.env.example`, scripts e docs usam placeholders, não valores que pareçam segredo
 - [ ] `JWT_SECRET`/`DB_PASSWORD` reais existem só em `backend/.env`(local) ou `backend/.env.production` (gitignorado) / secret manager do Railway — nunca versionados
 - [ ] `JWT_SECRET` de produção é único e longo (≠ default de dev `__INSECURE_DEV_JWT_SECRET__`)
-- [ ] `DATABASE_URL` de produção usa a conexão **direta** do Supabase (porta 5432, `sslmode=require`)
+- [ ] `DATABASE_URL` de produção usa a **Session pooler** do Supabase (IPv4, porta 5432, `sslmode=require`) — a conexão direta é IPv6-only e falha no egress IPv4 do Railway ([supabase-setup.md](../setup/supabase-setup.md#qual-connection-string-usar--e-por-quê-lição-do-deploy-no-railway))
 - [ ] Seed `admin@loja.local` / `admin123` desativado ou com senha trocada em produção
 - [ ] Toda rota de negócio verifica autenticação (`Authenticate`) ✅
 - [ ] Toda rota de negócio verifica autorização (`RequirePerm("recurso:acao")`) ✅

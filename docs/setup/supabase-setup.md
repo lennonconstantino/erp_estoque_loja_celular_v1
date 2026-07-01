@@ -19,23 +19,42 @@ O Supabase é usado exclusivamente como **host do PostgreSQL**. Autenticação �
 
 ## 3. Coletar credenciais
 
-O backend Go precisa apenas da connection string direta. O frontend não conecta no Supabase — ele fala apenas com a API Go.
+O backend Go precisa apenas da connection string. O frontend não conecta no Supabase — ele fala apenas com a API Go.
 
 | Valor | Onde encontrar | Usado por |
 |-------|---------------|-----------|
-| **Connection string (Session mode)** | Dashboard → **Project Settings** → **Database** → *Connection string* → aba *URI* | Backend + migrations |
+| **Connection string (Session pooler)** | Dashboard → **Connect** → aba *Connection string* → **Session pooler** | Backend + migrations |
 | **Database password** | A senha definida na criação do projeto | Parte da connection string |
 | **Project ref** | URL do dashboard: `supabase.com/dashboard/project/<ref>` | Referência nos comandos CLI |
 
-> **Atenção:** troque `sslmode=disable` por `sslmode=require` na connection string do Supabase. O PostgreSQL local usa `disable`; o Supabase exige SSL.
+> **Atenção:** garanta `sslmode=require` na connection string do Supabase. O PostgreSQL local usa `disable`; o Supabase exige SSL.
 
-Exemplo de `DATABASE_URL` para Supabase:
+### Qual connection string usar — e por quê (lição do deploy no Railway)
+
+O Supabase oferece três formas de conexão. A escolha certa depende de **onde o
+backend roda**:
+
+| Forma | Host / porta | IP | Serve p/ migrations? | Quando usar |
+|-------|--------------|----|----|-------------|
+| **Direct** | `db.<ref>.supabase.co:5432` | **IPv6-only** | Sim | Só de máquinas com IPv6 (ex.: seu laptop) |
+| **Session pooler** | `aws-1-<região>.pooler.supabase.com:5432` (user `postgres.<ref>`) | **IPv4** | Sim | **Produção no Railway** (egress IPv4) e qualquer host sem IPv6 |
+| **Transaction pooler** | `...pooler.supabase.com:6543` | IPv4 | **Não** (quebra prepared statements do pgx/migrate) | Serverless de altíssima concorrência — não neste projeto |
+
+> **Railway (e a maioria dos PaaS) só tem egress IPv4.** A conexão **direta** do
+> Supabase publica apenas registro AAAA (IPv6), então o pre-deploy `migrate up`
+> falha com `dial tcp [2600:…]:5432: network is unreachable`. Em produção use a
+> **Session pooler** (IPv4, porta 5432 — suporta migrations). Detalhes e o runbook
+> em [../licoes-aprendidas.md](../licoes-aprendidas.md).
+
+Exemplos de `DATABASE_URL`:
 
 ```
-postgres://postgres:[senha]@db.[ref].supabase.co:5432/postgres?sslmode=require
-```
+# Session pooler (produção no Railway — IPv4, porta 5432)
+postgres://postgres.<ref>:[senha]@aws-1-<região>.pooler.supabase.com:5432/postgres?sslmode=require
 
-Nunca use o **Transaction pooler** (porta 6543) para migrations — use a conexão direta (porta 5432).
+# Direct (dev, só de máquina com IPv6)
+postgres://postgres:[senha]@db.<ref>.supabase.co:5432/postgres?sslmode=require
+```
 
 ## 4. Configurar variáveis de ambiente
 
@@ -43,7 +62,8 @@ Copie `backend/.env.example` para `backend/.env` e preencha:
 
 ```dotenv
 # Banco de dados — Supabase (produção / staging)
-DATABASE_URL=postgres://postgres:[senha]@db.[ref].supabase.co:5432/postgres?sslmode=require
+# Em produção (Railway), use a Session pooler (IPv4). Ver §3 acima.
+DATABASE_URL=postgres://postgres.[ref]:[senha]@aws-1-[região].pooler.supabase.com:5432/postgres?sslmode=require
 
 # JWT — troque em produção
 JWT_SECRET=troque-este-segredo-em-producao
