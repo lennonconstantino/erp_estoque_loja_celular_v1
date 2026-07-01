@@ -49,6 +49,7 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 | [Banco de Dados e Migrations](setup/database-migrations.md) | Inicialização, migrations e seed |
 | [Setup do Frontend](setup/frontend-setup.md) | Convenções da SPA React, stack e variáveis |
 | [Deploy no Railway](setup/railway-deployment.md) | Deploy do backend e frontend em produção |
+| [CI/CD](setup/cicd.md) | Esteira GitHub Actions (gate) + auto-deploy Railway, staging→produção, fitness functions |
 
 ## Runbooks
 

@@ -59,7 +59,8 @@ public/
 .codex
 .cursor
 .gemini
-.github
+# .github/skills são skills de agente (não versionar); .github/workflows é CI (versionar).
+.github/skills/
 .opencode
 .trae
 .kombai

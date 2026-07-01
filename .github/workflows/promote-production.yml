@@ -1,0 +1,32 @@
+name: Promote to production
+
+# Promoção controlada: empurra main → branch `production` (fast-forward). O Railway
+# (env production tracando `production`, com "Wait for CI") deploya após o CI verde.
+# O gate de aprovação é o GitHub Environment `production` (Required reviewers).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: production   # exige aprovação (configurar Required reviewers)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verificar fast-forward main → production
+        run: |
+          git fetch origin main production || git fetch origin main
+          if git rev-parse --verify origin/production >/dev/null 2>&1; then
+            if ! git merge-base --is-ancestor origin/production origin/main; then
+              echo "::error::'production' divergiu de 'main' — não é fast-forward. Reconcilie manualmente."
+              exit 1
+            fi
+          else
+            echo "Branch 'production' ainda não existe; será criado a partir de main."
+          fi
+      - name: Promover (fast-forward push)
+        run: git push origin origin/main:refs/heads/production

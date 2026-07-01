@@ -3,6 +3,23 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.3.0] — 2026-07-01
+
+Esteira de CI/CD (GitHub Actions como gate + auto-deploy nativo do Railway).
+
+### Adicionado
+
+- **`ci.yml`** (PR + push main): jobs `backend-test` (go vet + `go test -cover`, com
+  `-race` só no main, + FF1), `frontend` (pnpm lint + build), `build-images`
+  (docker build backend/frontend) e `integration` (sobe o stack e roda FF1+FF2 como
+  gate + FF3 p99 informativa). Versões vêm do repo (`go.mod`, `.nvmrc`, Python 3.12).
+- **`promote-production.yml`**: promoção manual com aprovação (GitHub Environment)
+  que faz fast-forward `main`→`production`, com guarda anti-divergência.
+- **`nightly-chaos.yml`**: FF4 (chaos) agendado, não-bloqueante.
+- **`run_all.py`** aceita subconjunto de FFs (`ff1 ff2 ff3`); `requirements.txt`
+  (httpx); `.nvmrc` (Node 20); alvos `make fitness` / `make fitness-static`.
+- Documentação da esteira em [docs/setup/cicd.md](../setup/cicd.md).
+
 ## [1.2.0] — 2026-07-01
 
 Fase 9 executada: aplicação **no ar** em produção (Railway + Supabase), com o
@@ -169,6 +186,7 @@ observabilidade, hardening de segredos e documentação base (anterior ao MVP).
 - Tratamento de segredos no docker-compose via interpolação de env obrigatória,
   guia de secret scanning e itens de checklist pré-deploy. (`a55d305`)
 
+[1.3.0]: #130--2026-07-01
 [1.2.0]: #120--2026-07-01
 [1.1.0]: #110--2026-06-26
 [1.0.0]: #100--2026-06-26

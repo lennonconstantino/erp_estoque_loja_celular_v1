@@ -1,0 +1,109 @@
+# CI/CD — GitHub Actions + Railway
+
+A esteira usa **GitHub Actions como gate de qualidade** e o **auto-deploy nativo do
+Railway** para publicar. O Railway só deploya um commit depois que os checks ficam
+verdes (setting **"Wait for CI"**). Não há `RAILWAY_TOKEN` no GitHub.
+
+## Fluxo
+
+```mermaid
+flowchart TD
+    PR["Pull Request"] --> CI["ci.yml (gate)"]
+    push["push em main"] --> CI
+    CI --> green{"checks verdes?"}
+    green -->|"merge em main"| stg["Railway env staging<br/>Wait for CI · auto-deploy"]
+    stg --> promote["Action: Promote to production<br/>(aprovação no Environment)"]
+    promote -->|"main → branch production"| prod["Railway env production<br/>Wait for CI · auto-deploy"]
+    cron["schedule diário"] --> chaos["nightly-chaos.yml (FF4)"]
+```
+
+PR → CI → merge em `main` → **staging** deploya → validar → Action **Promote to
+production** (aprovação) empurra `main`→`production` → **production** deploya.
+
+## Workflows
+
+| Arquivo | Gatilho | O que faz |
+|---------|---------|-----------|
+| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) | PR + push `main` | Gate de qualidade (jobs abaixo) |
+| [`.github/workflows/promote-production.yml`](../../.github/workflows/promote-production.yml) | Manual (`workflow_dispatch`) | Fast-forward `main`→`production` com aprovação |
+| [`.github/workflows/nightly-chaos.yml`](../../.github/workflows/nightly-chaos.yml) | Cron diário + manual | FF4 (chaos) num stack efêmero — não bloqueia |
+
+### Jobs do `ci.yml` (nomes = *required checks*)
+
+- **`backend-test`** — `go vet` + `go test -cover` (sempre) e `go test -race` (só no
+  `main`); depois **FF1** (boundary isolation, estático). Go vem de
+  `backend/go.mod` (`go-version-file`).
+- **`frontend`** — `pnpm install --frozen-lockfile` + `pnpm lint` + `pnpm build`
+  (tsc + vite). Node vem do `.nvmrc`; pnpm 9.
+- **`build-images`** — `docker build` do backend e do frontend (sem push): garante que
+  os Dockerfiles compilam (pega regressões como o fix do `$PORT`).
+- **`integration`** — sobe `db + migrate + api` via `docker compose`, espera `/health`
+  e roda as fitness functions:
+  - **gate (bloqueia):** `run_all.py ff1 ff2` (boundary + contratos/RBAC).
+  - **informativo (não bloqueia):** `run_all.py ff3` (p99) com `continue-on-error` e
+    `P99_LIMIT_MS=800` — runner compartilhado é ruidoso demais para a p99 ser gate.
+
+FF4 (chaos) **não** roda no `ci.yml` — fica no `nightly-chaos.yml` (destrutivo).
+
+## Fitness functions localmente
+
+```bash
+make up               # sobe o stack (db + migrate + api + frontend)
+make fitness          # roda FF1+FF2+FF3 (FF4 pede FF4_ENABLE=1)
+make fitness-static   # só FF1 (estático, não precisa de stack)
+
+# subconjuntos diretos:
+python3 scripts/fitness-functions/run_all.py ff1 ff2
+FF4_ENABLE=1 python3 scripts/fitness-functions/run_all.py ff4
+```
+
+`run_all.py` aceita uma ou mais FFs no argv (`ff1`..`ff4`); sem args roda todas.
+Dependências em [`scripts/fitness-functions/requirements.txt`](../../scripts/fitness-functions/requirements.txt)
+(`httpx`).
+
+## Ambientes no Railway
+
+Dois environments no projeto `erp-estoque`, cada um com **variáveis próprias**:
+
+| | `staging` | `production` |
+|---|---|---|
+| Branch tracado | `main` | `production` |
+| Deploy | auto (merge em main) | auto (após promoção) |
+| `DATABASE_URL` | banco de **staging** (Session Pooler) | banco de produção (Session Pooler) |
+| Migrations | automáticas (preDeploy `/app/migrate up`) | automáticas (preDeploy) |
+
+> **`DATABASE_URL` = Session Pooler (IPv4).** A conexão direta do Supabase é IPv6-only
+> e o egress do Railway é IPv4 — ver [licoes-aprendidas.md](../licoes-aprendidas.md) e
+> [supabase-setup.md](supabase-setup.md). **Staging deve usar um banco separado**
+> (Supabase branch/projeto próprio), nunca o de produção.
+
+## Configuração manual (uma vez, no painel)
+
+Não versionável — configurar nos dashboards:
+
+1. **Railway → serviços backend e frontend, envs `staging` e `production`:** Settings →
+   ativar **"Wait for CI"**.
+2. **Railway → criar env `staging`** (duplicar production) e preencher suas variáveis:
+   `DATABASE_URL` (Session Pooler de um banco de staging), `JWT_SECRET` próprio,
+   `ALLOWED_ORIGINS` = URL do frontend de staging, `VITE_API_BASE_URL` (frontend) =
+   URL do backend de staging. `staging` traca `main`; `production` traca `production`.
+3. **GitHub → Settings → Environments → `production`:** adicionar **Required reviewers**
+   (gate de aprovação do `promote-production.yml`).
+4. **GitHub → Branch protection do `main`:** exigir PR e os checks required por nome —
+   `backend-test`, `frontend`, `build-images`, `integration`. (O passo FF3 é
+   informativo e **não** é required.)
+5. **GitHub → Branch protection do `production`:** exigir status checks e **restringir
+   push**; incluir o *GitHub Actions bot* (ou um App/PAT fine-grained em secret) no
+   bypass para a Action de promoção conseguir empurrar o fast-forward.
+
+## Promoção para produção
+
+1. Actions → **Promote to production** → *Run workflow*.
+2. Aprovar no Environment `production`.
+3. A Action verifica que é fast-forward (`main` à frente de `production`) e empurra
+   `main`→`production`; o Railway deploya após o CI verde.
+4. Verificar `/health` do backend e do frontend e o login admin (runbook em
+   [licoes-aprendidas.md](../licoes-aprendidas.md)).
+
+> Se a Action falhar em "não é fast-forward", `production` divergiu de `main` —
+> reconcilie manualmente antes de repetir (a Action nunca faz force-push).

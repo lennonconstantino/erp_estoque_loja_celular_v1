@@ -1,0 +1,3 @@
+# Dependências das fitness functions (scripts/fitness-functions/run_all.py).
+# httpx é a única lib externa (cliente HTTP async usado em FF2/FF3/FF4).
+httpx>=0.27,<1.0

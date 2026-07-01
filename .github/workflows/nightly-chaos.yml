@@ -1,0 +1,51 @@
+name: Nightly Chaos (FF4)
+
+# Roda a FF4 (degradação graciosa: derruba e reergue o Postgres) num stack efêmero.
+# Não bloqueia deploys — serve de alarme de resiliência. Diário + disparo manual.
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chaos:
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-chaos-secret-not-for-prod
+      BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gerar backend/.env de CI
+        run: |
+          cat > backend/.env <<'EOF'
+          DB_USER=erp
+          DB_PASSWORD=ci_pg_password
+          DB_NAME=erp_estoque
+          JWT_SECRET=ci-chaos-secret-not-for-prod
+          EOF
+      - name: Subir stack (db + migrate + api)
+        run: docker compose --env-file backend/.env -f docker-compose.yml up -d --build api
+      - name: Aguardar API saudável
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS "$BASE_URL/health" >/dev/null 2>&1; then echo "API up"; exit 0; fi
+            sleep 2
+          done
+          echo "API não respondeu a tempo"; docker compose -f docker-compose.yml logs api; exit 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r scripts/fitness-functions/requirements.txt
+      # FF4 é destrutivo: para o container do Postgres e valida a recuperação.
+      # O nome do container derivado por run_all.py casa com o project name padrão
+      # do compose (basename do diretório do checkout).
+      - name: FF4 — Chaos / degradação graciosa
+        env:
+          FF4_ENABLE: '1'
+        run: python scripts/fitness-functions/run_all.py ff4
+      - name: Logs do stack em caso de falha
+        if: failure()
+        run: docker compose -f docker-compose.yml logs

@@ -15,6 +15,7 @@ INSECURE_DB  := __INSECURE_DEV_DB_PASSWORD__
 	be-build be-run be-test be-vet be-fmt \
 	migrate-up migrate-down migrate-create seed reset supabase-setup \
 	fe-install fe-dev fe-build fe-lint \
+	fitness fitness-static \
 	build test lint
 
 help:          ## lista os alvos disponíveis
@@ -93,6 +94,12 @@ fe-build:      ## build de produção (tsc + vite)
 
 fe-lint:       ## ESLint
 	cd frontend && pnpm lint
+
+## ---- Fitness functions -------------------------------------------------
+fitness:       ## roda as fitness functions contra o stack local (suba com `make up`)
+	python3 scripts/fitness-functions/run_all.py
+fitness-static: ## roda só FF1 (boundary isolation — estático, sem infra)
+	JWT_SECRET=$${JWT_SECRET:-fitness-static-dummy} python3 scripts/fitness-functions/run_all.py ff1
 
 ## ---- Agregados ---------------------------------------------------------
 build: be-build fe-build   ## compila backend e frontend
