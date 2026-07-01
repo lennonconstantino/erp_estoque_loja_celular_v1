@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './sidebar'
@@ -29,8 +29,6 @@ export function PageShell({
   back,
   children,
 }: PageShellProps) {
-  const navigate = useNavigate()
-
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20">
       <a
@@ -45,13 +43,13 @@ export function PageShell({
         <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
             {back ? (
-              <button
-                onClick={() => navigate(back)}
+              <Link
+                to={back}
                 className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-all rounded-full hover:bg-accent active:scale-95"
                 aria-label="Voltar"
               >
                 <ArrowLeft className="w-4 h-4" />
-              </button>
+              </Link>
             ) : (
               <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
                 <Home className="w-3 h-3" />

@@ -203,6 +203,8 @@ export default function NovaVendaPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type="text"
+                      inputMode="numeric"
+                      aria-label="Buscar cliente por CPF"
                       placeholder="CPF do cliente..."
                       value={cpfBusca}
                       onChange={(e) => setCpfBusca(e.target.value)}

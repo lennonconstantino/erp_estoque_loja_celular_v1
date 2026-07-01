@@ -265,6 +265,7 @@ export default function ClientesPage() {
                 <input
                   required
                   disabled={!!editando}
+                  inputMode="numeric"
                   placeholder="000.000.000-00"
                   value={form.cpf}
                   onChange={(e) => campo('cpf', e.target.value)}
@@ -275,6 +276,8 @@ export default function ClientesPage() {
                 <input
                   required
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   value={form.email}
                   onChange={(e) => campo('email', e.target.value)}
                   className={inputClasses()}
@@ -295,6 +298,9 @@ export default function ClientesPage() {
               </Field>
               <Field label="Telefone">
                 <input
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
                   value={form.telefone}
                   onChange={(e) => campo('telefone', e.target.value)}
                   className={inputClasses()}
@@ -310,6 +316,8 @@ export default function ClientesPage() {
                   <Field label={`CEP${buscandoCep ? ' (Buscando…)' : ''}`}>
                     <input
                       value={form.cep}
+                      autoComplete="postal-code"
+                      inputMode="numeric"
                       placeholder="00000-000"
                       onChange={(e) => {
                         campo('cep', e.target.value)
@@ -320,16 +328,16 @@ export default function ClientesPage() {
                   </Field>
                 </div>
                 <Field label="Número">
-                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} className={inputClasses()} placeholder="123" />
+                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} inputMode="numeric" className={inputClasses()} placeholder="123" />
                 </Field>
                 <Field label="Complemento">
-                  <input value={form.complemento} onChange={(e) => campo('complemento', e.target.value)} className={inputClasses()} placeholder="Apt 42" />
+                  <input value={form.complemento} onChange={(e) => campo('complemento', e.target.value)} autoComplete="address-line2" className={inputClasses()} placeholder="Apt 42" />
                 </Field>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
                 <div className="sm:col-span-2">
                   <Field label="Rua / Logradouro">
-                    <input value={form.rua} onChange={(e) => campo('rua', e.target.value)} className={inputClasses()} placeholder="Nome da rua" />
+                    <input value={form.rua} onChange={(e) => campo('rua', e.target.value)} autoComplete="address-line1" className={inputClasses()} placeholder="Nome da rua" />
                   </Field>
                 </div>
                 <Field label="Bairro">
@@ -339,11 +347,11 @@ export default function ClientesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mt-6">
                 <div className="sm:col-span-3">
                   <Field label="Cidade">
-                    <input value={form.cidade} onChange={(e) => campo('cidade', e.target.value)} className={inputClasses()} placeholder="Ex: São Paulo" />
+                    <input value={form.cidade} onChange={(e) => campo('cidade', e.target.value)} autoComplete="address-level2" className={inputClasses()} placeholder="Ex: São Paulo" />
                   </Field>
                 </div>
                 <Field label="UF">
-                  <input maxLength={2} value={form.uf} onChange={(e) => campo('uf', e.target.value.toUpperCase())} className={inputClasses()} placeholder="SP" />
+                  <input maxLength={2} value={form.uf} onChange={(e) => campo('uf', e.target.value.toUpperCase())} autoComplete="address-level1" className={inputClasses()} placeholder="SP" />
                 </Field>
               </div>
             </div>

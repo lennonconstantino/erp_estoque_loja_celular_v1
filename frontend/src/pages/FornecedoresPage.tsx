@@ -280,6 +280,7 @@ export default function FornecedoresPage() {
                 <input
                   required
                   disabled={!!editando}
+                  inputMode="numeric"
                   placeholder="00.000.000/0000-00"
                   value={form.cnpj}
                   onChange={(e) => campo('cnpj', e.target.value)}
@@ -290,6 +291,8 @@ export default function FornecedoresPage() {
                 <input
                   required
                   type="email"
+                  inputMode="email"
+                  autoComplete="off"
                   value={form.email}
                   onChange={(e) => campo('email', e.target.value)}
                   className={inputClasses()}
@@ -323,6 +326,9 @@ export default function FornecedoresPage() {
               <Field label="Telefone Principal *">
                 <input
                   required
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="off"
                   value={form.telefone1}
                   onChange={(e) => campo('telefone1', e.target.value)}
                   className={inputClasses()}
@@ -331,6 +337,9 @@ export default function FornecedoresPage() {
               </Field>
               <Field label="Telefone Secundário">
                 <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="off"
                   value={form.telefone2}
                   onChange={(e) => campo('telefone2', e.target.value)}
                   className={inputClasses()}
@@ -366,6 +375,7 @@ export default function FornecedoresPage() {
                   <Field label={`CEP${buscandoCep ? ' (Buscando…)' : ''}`}>
                     <input
                       value={form.cep}
+                      inputMode="numeric"
                       placeholder="00000-000"
                       onChange={(e) => {
                         campo('cep', e.target.value)
@@ -376,7 +386,7 @@ export default function FornecedoresPage() {
                   </Field>
                 </div>
                 <Field label="Número">
-                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} className={inputClasses()} placeholder="123" />
+                  <input value={form.numero} onChange={(e) => campo('numero', e.target.value)} inputMode="numeric" className={inputClasses()} placeholder="123" />
                 </Field>
                 <Field label="Complemento">
                   <input value={form.complemento} onChange={(e) => campo('complemento', e.target.value)} className={inputClasses()} placeholder="Sl 101" />

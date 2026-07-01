@@ -5,13 +5,15 @@ import {
   OctagonX,
   TriangleAlert,
 } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/lib/theme"
 import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  // Consome o ThemeProvider da app (@/lib/theme), não o next-themes — assim o
+  // toast segue o tema real (light/dark) em vez de ficar preso em "system".
+  const { theme } = useTheme()
 
   return (
     <Sonner
