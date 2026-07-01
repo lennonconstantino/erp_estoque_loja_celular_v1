@@ -11,6 +11,12 @@ FF4: Chaos / Degradação — derruba o Postgres e valida que o processo sobrevi
      (/health continua 200, rota dependente degrada com 5xx) e se recupera.
      Destrutivo: desabilitado por padrão (ative com FF4_ENABLE=1).
 
+Uso:
+  python run_all.py               # roda todas as FFs habilitadas
+  python run_all.py ff1           # só FF1 (estático, sem infra)
+  python run_all.py ff1 ff2       # FF1 + FF2 (gate de integração)
+  python run_all.py ff3           # só FF3 (p99 — usada como passo informativo no CI)
+
 Variáveis de ambiente:
   BASE_URL     (default http://localhost:8080)
   JWT_SECRET   (obrigatória; se ausente, tenta ler de backend/.env)
@@ -18,7 +24,8 @@ Variáveis de ambiente:
   FF4_ENABLE   (=1 para rodar o teste de caos que para o container do banco)
 """
 import sys, os, base64, hashlib, hmac, json, time, asyncio, subprocess, statistics, pathlib
-import httpx
+# httpx é importado sob demanda dentro de FF2/FF3/FF4 (import lazy): assim a FF1
+# (análise estática) roda com stdlib puro, sem depender de pacotes externos.
 
 # scripts/fitness-functions/run_all.py → raiz do repositório
 ROOT        = pathlib.Path(__file__).resolve().parents[2]
@@ -203,6 +210,7 @@ CONTRACTS = [
 
 
 async def run_ff2() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print(f"FF2 — Contract Tests ({BASE_URL})")
     print("─" * 60)
@@ -237,6 +245,7 @@ CONCURRENCY = 5
 
 
 async def run_ff3() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print(f"FF3 — Latência p99 < {P99_LIMIT_MS}ms ({N_REQUESTS} req, concurrency={CONCURRENCY})")
     print("─" * 60)
@@ -288,6 +297,7 @@ def _docker(*args) -> subprocess.CompletedProcess:
 
 
 async def run_ff4() -> bool:
+    import httpx  # lazy: só FF2/FF3/FF4 precisam de httpx
     print("\n" + "─" * 60)
     print("FF4 — Chaos: degradação graciosa na queda do Postgres")
     print("─" * 60)
@@ -364,12 +374,28 @@ async def main():
     print("║   SUITE DE FITNESS FUNCTIONS — ERP Estoque (Go)      ║")
     print("╚══════════════════════════════════════════════════════╝")
 
-    results = [
-        ("FF1 Boundary Isolation",   run_ff1()),
-        ("FF2 Contract Tests",       await run_ff2()),
-        ("FF3 Latência p99",         await run_ff3()),
-        ("FF4 Chaos / Degradação",   await run_ff4()),
+    # Seleção opcional de FFs via argv (ex.: `run_all.py ff1 ff2`). Sem args roda
+    # todas — mantém o comportamento original. Permite fatiar no CI: FF1 no job
+    # rápido, FF1+FF2 como gate na integração e FF3 (p99) como passo informativo.
+    only = {a.lower() for a in sys.argv[1:]}
+    valid = {"ff1", "ff2", "ff3", "ff4"}
+    if only - valid:
+        print(f"FFs desconhecidas: {sorted(only - valid)}. Use: {sorted(valid)}")
+        sys.exit(2)
+
+    runners = [
+        ("ff1", "FF1 Boundary Isolation", run_ff1),
+        ("ff2", "FF2 Contract Tests",     run_ff2),
+        ("ff3", "FF3 Latência p99",       run_ff3),
+        ("ff4", "FF4 Chaos / Degradação", run_ff4),
     ]
+
+    results = []
+    for key, name, fn in runners:
+        if only and key not in only:
+            continue
+        out = fn()
+        results.append((name, await out if asyncio.iscoroutine(out) else out))
 
     print("\n╔══════════════════════════════════════════════════════╗")
     print("║                   RESULTADO FINAL                   ║")

@@ -1,0 +1,117 @@
+name: CI
+
+# Gate de qualidade. Roda em PRs e em push no main. O Railway ("Wait for CI")
+# só publica commits cujos checks required ficaram verdes.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela runs anteriores do mesmo ref (PR/branch) para poupar minutos.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Backend: estático + testes unitários + FF1 (boundary isolation) ─────────
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: go vet ./...
+      - run: go test -cover ./...
+      # -race é caro/intermitente: só no main (o merge já passou pelo PR).
+      - name: go test -race (apenas no main)
+        if: github.ref == 'refs/heads/main'
+        run: go test -race ./...
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # FF1 é análise estática (lê imports Go); não sobe infra. JWT_SECRET é
+      # exigido no import do script (lista CONTRACTS), então usamos um dummy.
+      - name: FF1 — Boundary Isolation
+        working-directory: ${{ github.workspace }}
+        env:
+          JWT_SECRET: ci-fitness-ff1-dummy
+        run: python scripts/fitness-functions/run_all.py ff1
+
+  # ── Frontend: lint + build (tsc + vite) ─────────────────────────────────────
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+
+  # ── Imagens Docker compilam (pega regressões de Dockerfile, ex.: fix $PORT) ──
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build imagem do backend
+        run: docker build -t erp-backend:ci ./backend
+      - name: Build imagem do frontend
+        run: docker build --build-arg VITE_API_BASE_URL=http://localhost:8080 -t erp-frontend:ci ./frontend
+
+  # ── Integração: sobe o stack e roda FF1+FF2 (gate) + FF3 (informativa) ───────
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-integration-secret-not-for-prod
+      BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gerar backend/.env de CI
+        run: |
+          cat > backend/.env <<'EOF'
+          DB_USER=erp
+          DB_PASSWORD=ci_pg_password
+          DB_NAME=erp_estoque
+          JWT_SECRET=ci-integration-secret-not-for-prod
+          EOF
+      - name: Subir stack (db + migrate + api)
+        run: docker compose --env-file backend/.env -f docker-compose.yml up -d --build api
+      - name: Aguardar API saudável
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS "$BASE_URL/health" >/dev/null 2>&1; then echo "API up"; exit 0; fi
+            sleep 2
+          done
+          echo "API não respondeu a tempo"; docker compose -f docker-compose.yml logs api; exit 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r scripts/fitness-functions/requirements.txt
+      - name: FF1 + FF2 — boundary + contratos/RBAC (gate)
+        run: python scripts/fitness-functions/run_all.py ff1 ff2
+      # FF3 (p99) é informativa: runner compartilhado é ruidoso; reporta sem reprovar.
+      - name: FF3 — latência p99 (informativo)
+        continue-on-error: true
+        env:
+          P99_LIMIT_MS: '800'
+        run: python scripts/fitness-functions/run_all.py ff3
+      - name: Logs do stack em caso de falha
+        if: failure()
+        run: docker compose -f docker-compose.yml logs
