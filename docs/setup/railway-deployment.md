@@ -191,9 +191,24 @@ railway redeploy --service erp-estoque-backend --yes
 
 ## Lições práticas
 
+- **`DATABASE_URL` = Session Pooler do Supabase (IPv4), não a conexão direta.** A
+  direta `db.<ref>.supabase.co:5432` só tem registro **AAAA (IPv6)** e o egress do
+  Railway é IPv4 → o pre-deploy `migrate up` falha com `dial tcp [..]:5432: network
+  is unreachable`. Use o **Session pooler** (Supabase → Connect → *Session pooler*):
+  `postgres://postgres.<ref>:<senha>@aws-1-<região>.pooler.supabase.com:5432/postgres?sslmode=require`
+  (usuário vira `postgres.<ref>`, host `...pooler.supabase.com`). É IPv4, porta 5432
+  e suporta migrations. **Não** use o *Transaction pooler* (porta 6543): quebra os
+  prepared statements do pgx e o golang-migrate.
+- **nginx do frontend deve escutar em `$PORT`.** O Railway injeta `PORT` e faz o
+  healthcheck nessa porta; o `nginx.conf` declara `listen 80;`, então o
+  `frontend/Dockerfile` reescreve para `$PORT` no boot (`sed … listen ${PORT:-80}`).
+  Sem isso o healthcheck nunca alcança o nginx e o deploy fica `Failed` (o container
+  sobe e o Railway o mata em seguida).
 - Não defina `PORT` manualmente. O Railway injeta automaticamente — o servidor Go deve usá-lo.
 - As variáveis `VITE_*` são compiladas dentro do build. Defina-as **antes** de rodar `railway up` para o frontend; redeploy após qualquer mudança.
-- Use a connection string de **sessão direta** (porta 5432) tanto para a API quanto para migrations — nunca o transaction pooler (porta 6543).
+- Deploy do frontend via CLI: como o serviço tem **Root Directory = `frontend`**, rode
+  `railway up --service erp-estoque-frontend` a partir da **raiz do repo** (não
+  `railway up ./frontend --path-as-root`, que faz o builder procurar `frontend/frontend`).
 - O `JWT_SECRET` em produção deve ser uma string longa e aleatória. Nunca use o valor padrão do `.env.example`.
 
 ## Verificação final

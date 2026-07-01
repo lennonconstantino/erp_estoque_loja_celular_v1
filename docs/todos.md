@@ -218,10 +218,18 @@ resta a Fase 9 — deploy).
 
 ## Fase 9 — Deploy (Railway + Supabase)
 
-> **Estado:** tudo **configurado e pronto para subir**. Os artefatos de deploy estão
-> commitados e validados localmente; faltam apenas as ações que rodam contra os
-> provedores (criar projetos, setar variáveis e dar deploy), executadas quando for
-> efetivamente subir. Passo a passo em [docs/setup/railway-deployment.md](setup/railway-deployment.md).
+> **Estado:** **NO AR** desde 2026-06-30. Backend e frontend rodando no Railway
+> (projeto `erp-estoque`, env `production`) contra Postgres no Supabase. Passo a
+> passo em [docs/setup/railway-deployment.md](setup/railway-deployment.md).
+>
+> - Backend:  https://erp-estoque-backend-production.up.railway.app  (`/health` → 200)
+> - Frontend: https://erp-estoque-frontend-production.up.railway.app (`/health` → ok)
+>
+> **Duas correções necessárias descobertas na subida** (ver §Lições em
+> railway-deployment.md): (1) `DATABASE_URL` precisa ser a do **Session Pooler**
+> do Supabase (IPv4) — a conexão direta `db.<ref>.supabase.co` é IPv6-only e o
+> egress do Railway é IPv4; (2) `frontend/Dockerfile` faz o nginx escutar em
+> `$PORT` (Railway sonda o healthcheck nessa porta, não na 80).
 
 ### Preparação no repositório (pronto)
 
@@ -235,16 +243,21 @@ resta a Fase 9 — deploy).
 - [x] Validação local: build dos dois binários, imagem Docker do backend, ciclo `up`/`down`/`up` num Postgres limpo
 - [x] Fix: `000010_seed_demo.down.sql` agora reverte o ledger (DISABLE/ENABLE trigger pelo owner)
 
-### Execução do deploy (rodar ao subir — fora do escopo "não subir agora")
+### Execução do deploy (concluída em 2026-06-30)
 
-- [ ] Criar projeto no Supabase; obter `DATABASE_URL` (porta 5432, `sslmode=require`)
-- [ ] Criar projeto no Railway com dois serviços: `erp-estoque-backend` e `erp-estoque-frontend`
-- [ ] Configurar variáveis de ambiente no Railway para o backend (`DATABASE_URL`, `JWT_SECRET`, `ALLOWED_ORIGINS`, etc.)
-- [ ] Configurar variável `VITE_API_BASE_URL` no serviço de frontend **antes** do primeiro build
-- [ ] Pre-deploy command do backend já vem de `railway.json` (`/app/migrate up`) — só confirmar
-- [ ] Fazer deploy; verificar `/health` do backend
-- [ ] Verificar migrations aplicadas no Supabase (tables nos schemas corretos)
-- [ ] Testar ciclo completo em produção: login → compra → venda → ajuste → relatório
+- [x] Projeto Supabase criado; `DATABASE_URL` via **Session Pooler** (IPv4, `aws-1-us-east-2.pooler.supabase.com:5432`, usuário `postgres.<ref>`, `sslmode=require`)
+- [x] Projeto Railway `erp-estoque` com dois serviços: `erp-estoque-backend` e `erp-estoque-frontend`
+- [x] Variáveis do backend no Railway (`DATABASE_URL` do pooler, `JWT_SECRET`, `ALLOWED_ORIGINS`, `JWT_*_TTL`, `CEP_API_URL`, `APP_ENV=production`); removidas vars legadas `DB_*`/`APP_PORT` não usadas pelo código
+- [x] `VITE_API_BASE_URL` setado no frontend (build-arg) apontando p/ o domínio do backend antes do build
+- [x] Pre-deploy `/app/migrate up` confirmado nos logs (`migrate: … versão mais recente`)
+- [x] Deploy dos dois serviços; `/health` do backend → `{"status":"ok"}` e do frontend → `ok`
+- [x] Migrations aplicadas no Supabase confirmadas (versão 10; schemas iam/clientes/fornecedores/catalogo/estoque/compras/vendas; seed admin presente)
+- [x] Ciclo em produção verificado: login admin → 200; CORS preflight/real com `Access-Control-Allow-Origin` correto; leitura de todos os módulos (produtos, categorias, clientes, fornecedores, vendas, compras, usuários) e relatórios → 200
+
+> Pendência de durabilidade: o serviço de frontend faz auto-deploy do branch `main`
+> no GitHub. O fix do `frontend/Dockerfile` (nginx em `$PORT`) foi deployado via
+> `railway up` a partir dos arquivos locais; **precisa ser commitado em `main`**
+> para que um futuro push não reintroduza a versão quebrada.
 
 ---
 

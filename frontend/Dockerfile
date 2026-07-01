@@ -21,3 +21,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
+# O Railway injeta $PORT em runtime e faz o healthcheck nessa porta. O nginx.conf
+# declara `listen 80;`; reescrevemos para $PORT no boot (fallback 80 p/ local/docker).
+CMD ["/bin/sh","-c","sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
