@@ -11,14 +11,16 @@ flowchart TD
     PR["Pull Request"] --> CI["ci.yml (gate)"]
     push["push em main"] --> CI
     CI --> green{"checks verdes?"}
-    green -->|"merge em main"| stg["Railway env staging<br/>Wait for CI · auto-deploy"]
-    stg --> promote["Action: Promote to production<br/>(aprovação no Environment)"]
-    promote -->|"main → branch production"| prod["Railway env production<br/>Wait for CI · auto-deploy"]
+    green -->|"CI verde"| promote["Action manual: Promote to production\n(aprovação no Environment)"]
+    promote -->|"main → branch production\n(fast-forward)"| prod["Railway production\nWait for CI · auto-deploy"]
     cron["schedule diário"] --> chaos["nightly-chaos.yml (FF4)"]
 ```
 
-PR → CI → merge em `main` → **staging** deploya → validar → Action **Promote to
-production** (aprovação) empurra `main`→`production` → **production** deploya.
+PR → CI → merge em `main` → *(CI verde)* → Action manual **Promote to production**
+(aprovação no GitHub Environment) empurra `main`→`production` → Railway deploya.
+
+Não há ambiente de staging por enquanto. O branch `production` é o único gatilho
+de deploy; `main` só dispara o CI gate.
 
 ## Workflows
 
@@ -61,47 +63,44 @@ FF4_ENABLE=1 python3 scripts/fitness-functions/run_all.py ff4
 Dependências em [`scripts/fitness-functions/requirements.txt`](../../scripts/fitness-functions/requirements.txt)
 (`httpx`).
 
-## Ambientes no Railway
+## Ambiente no Railway
 
-Dois environments no projeto `erp-estoque`, cada um com **variáveis próprias**:
+Um único environment `production` no projeto `erp-estoque`:
 
-| | `staging` | `production` |
-|---|---|---|
-| Branch tracado | `main` | `production` |
-| Deploy | auto (merge em main) | auto (após promoção) |
-| `DATABASE_URL` | banco de **staging** (Session Pooler) | banco de produção (Session Pooler) |
-| Migrations | automáticas (preDeploy `/app/migrate up`) | automáticas (preDeploy) |
+| | `production` |
+|---|---|
+| Branch tracado | `production` |
+| Deploy | auto (após promoção via Action) |
+| `DATABASE_URL` | Session Pooler do Supabase (IPv4) |
+| Migrations | automáticas (preDeploy `/app/migrate up`) |
 
 > **`DATABASE_URL` = Session Pooler (IPv4).** A conexão direta do Supabase é IPv6-only
 > e o egress do Railway é IPv4 — ver [licoes-aprendidas.md](../licoes-aprendidas.md) e
-> [supabase-setup.md](supabase-setup.md). **Staging deve usar um banco separado**
-> (Supabase branch/projeto próprio), nunca o de produção.
+> [supabase-setup.md](supabase-setup.md).
 
 ## Configuração manual (uma vez, no painel)
 
 Não versionável — configurar nos dashboards:
 
-1. **Railway → serviços backend e frontend, envs `staging` e `production`:** Settings →
-   ativar **"Wait for CI"**.
-2. **Railway → criar env `staging`** (duplicar production) e preencher suas variáveis:
-   `DATABASE_URL` (Session Pooler de um banco de staging), `JWT_SECRET` próprio,
-   `ALLOWED_ORIGINS` = URL do frontend de staging, `VITE_API_BASE_URL` (frontend) =
-   URL do backend de staging. `staging` traca `main`; `production` traca `production`.
+1. **Railway → serviços backend e frontend:** Settings → conectar ao repositório GitHub
+   e selecionar **branch `production`** como branch de deploy.
+2. **Railway → cada serviço:** Settings → ativar **"Automatic Deployments"** +
+   **"Wait for CI"** (só deploya commit com checks verdes).
 3. **GitHub → Settings → Environments → `production`:** adicionar **Required reviewers**
    (gate de aprovação do `promote-production.yml`).
 4. **GitHub → Branch protection do `main`:** exigir PR e os checks required por nome —
-   `backend-test`, `frontend`, `build-images`, `integration`. (O passo FF3 é
-   informativo e **não** é required.)
+   `backend-test`, `frontend`, `build-images`, `integration`. (FF3 é informativo e
+   **não** é required check.)
 5. **GitHub → Branch protection do `production`:** exigir status checks e **restringir
-   push**; incluir o *GitHub Actions bot* (ou um App/PAT fine-grained em secret) no
-   bypass para a Action de promoção conseguir empurrar o fast-forward.
+   push direto**; incluir o *GitHub Actions bot* no bypass para a Action de promoção
+   conseguir empurrar o fast-forward.
 
 ## Promoção para produção
 
 1. Actions → **Promote to production** → *Run workflow*.
 2. Aprovar no Environment `production`.
 3. A Action verifica que é fast-forward (`main` à frente de `production`) e empurra
-   `main`→`production`; o Railway deploya após o CI verde.
+   `main`→`production`; o Railway deploya após o CI verde no branch `production`.
 4. Verificar `/health` do backend e do frontend e o login admin (runbook em
    [licoes-aprendidas.md](../licoes-aprendidas.md)).
 
