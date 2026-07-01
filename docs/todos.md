@@ -254,10 +254,10 @@ resta a Fase 9 — deploy).
 - [x] Migrations aplicadas no Supabase confirmadas (versão 10; schemas iam/clientes/fornecedores/catalogo/estoque/compras/vendas; seed admin presente)
 - [x] Ciclo em produção verificado: login admin → 200; CORS preflight/real com `Access-Control-Allow-Origin` correto; leitura de todos os módulos (produtos, categorias, clientes, fornecedores, vendas, compras, usuários) e relatórios → 200
 
-> Pendência de durabilidade: o serviço de frontend faz auto-deploy do branch `main`
-> no GitHub. O fix do `frontend/Dockerfile` (nginx em `$PORT`) foi deployado via
-> `railway up` a partir dos arquivos locais; **precisa ser commitado em `main`**
-> para que um futuro push não reintroduza a versão quebrada.
+> ~~Pendência de durabilidade: o fix do `frontend/Dockerfile` (nginx em `$PORT`)
+> precisa ser commitado em `main`.~~ **Resolvido:** commitado em `c0d3df8`
+> (`fix(deploy): nginx do frontend escuta em $PORT`); Railway↔GitHub integrado no
+> branch `production` (v1.4.0), então o push carrega o Dockerfile corrigido.
 
 ---
 
@@ -286,7 +286,19 @@ resta a Fase 9 — deploy).
 
 - [x] Implementar ordenação por coluna no `DataTable` (`sortAccessor`; ciclo asc → desc → sem ordenação; comparação numérica/`localeCompare` pt-BR/data)
 - [x] Habilitar colunas ordenáveis em todas as telas com dados tabulados
-- [ ] (Opcional) Ordenação global no servidor via parâmetros `sort`/`order` nos endpoints — hoje a ordenação é client-side sobre a página carregada
+- [ ] (Opcional — **backlog**) Ordenação global no servidor via parâmetros `sort`/`order` nos
+  endpoints paginados (clientes, produtos, categorias, estoque). Hoje a ordenação é client-side
+  sobre a página carregada, o que **basta no volume atual**; o ganho só aparece em datasets
+  grandes (ordenar só a página vira mentira). **Deferido** por ser o maior item restante e o
+  único com dimensão de segurança.
+  - Escopo: 4 camadas por módulo (handler parseia `sort`/`order` → porta inbound `Listar(...)`
+    ganha params → service repassa → repo monta `ORDER BY`) + frontend (o `DataTable` troca o
+    `sortAccessor` client-side por emitir `sort`/`order` e refazer o fetch a cada clique).
+  - **Risco/como fazer com segurança:** nome de coluna **não** pode ser parâmetro `$N` no
+    Postgres → é interpolado no SQL. **Nunca** interpolar o valor cru da query (SQL injection);
+    usar **allowlist por entidade** (`campo lógico → coluna real`) + um helper compartilhado em
+    `platform/` para montar o `ORDER BY`, testado isoladamente. Não deixar meio-caminho
+    (backend server-side + front client-side) — os dois mecanismos conflitam.
 
 ### Verificação
 
@@ -312,8 +324,11 @@ resta a Fase 9 — deploy).
 - [x] **Correção de build:** `cn` ausente em Compras, `Modal` aceitar `max-w-4xl`, imports
   não usados (NovaVenda, Relatórios), `icon: any` → `LucideIcon` no Dashboard
 - [x] Verificação: `pnpm tsc --noEmit`, `pnpm lint` e `pnpm build` sem erros
-- [ ] Pendências de a11y/UX e toast-tema documentadas em
-  [docs/reference/design-system.md](reference/design-system.md#pendências-e-próximos-passos-ui) — agendar
+- [x] Pendências de a11y/UX e toast-tema resolvidas (toast via `@/lib/theme`;
+  `autocomplete`/`inputMode` nos formulários; `warning` do `StatusBadge` em `yellow-800`;
+  "voltar" do `PageShell` como `<Link>`; `color-scheme`/`theme-color` no `index.css`/`index.html`).
+  Detalhe em [docs/reference/design-system.md](reference/design-system.md#pendências-e-próximos-passos-ui).
+  `pnpm tsc --noEmit` + `pnpm lint` limpos.
 
 ---
 

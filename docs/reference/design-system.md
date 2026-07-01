@@ -63,6 +63,35 @@ qualquer cor crua (`text-red-600`, `bg-white`, `bg-indigo-500`) não acompanha a
 tema e quebra a consistência. Para status/erros use os tokens `destructive`/`success` (ou
 o `StatusBadge`), não `red-600`/`green-600` soltos.
 
+### Paleta de cores (tokens)
+
+Espelho de [`src/index.css`](../../frontend/src/index.css) — valores em **HSL** (`H S% L%`,
+o formato consumido pelo Tailwind via `hsl(var(--token))`). A fonte da verdade continua sendo
+o `index.css`; ao alterar um token lá, atualize a linha correspondente aqui. É um sistema
+**neutro/monocromático**: no tema claro `primary` é **preto puro**; no escuro vira **índigo**.
+
+| Token (`--`) | Utilitário Tailwind | Claro (`:root`) | Escuro (`.dark`) | Papel |
+|---|---|---|---|---|
+| `background` | `bg-background` | `0 0% 100%` | `240 17% 4%` | Fundo geral da aplicação. |
+| `foreground` | `text-foreground` | `225 12% 7%` | `180 6% 97%` | Texto principal sobre o fundo. |
+| `card` / `card-foreground` | `bg-card` / `text-card-foreground` | `220 14% 98%` / `225 12% 7%` | `240 6% 6%` / `180 6% 97%` | Cartões, tabelas e blocos de conteúdo. |
+| `popover` / `popover-foreground` | `bg-popover` / `text-popover-foreground` | `0 0% 100%` / `225 12% 7%` | `240 6% 6%` / `180 6% 97%` | Menus, paleta de comandos, dropdowns. |
+| `primary` / `primary-foreground` | `bg-primary` / `text-primary-foreground` | `0 0% 0%` / `0 0% 100%` | `234 58% 60%` / `0 0% 100%` | CTAs, estado selecionado, `Button.primary`. |
+| `secondary` / `secondary-foreground` | `bg-secondary` / `text-secondary-foreground` | `220 14% 96%` / `225 12% 7%` | `240 4% 12%` / `180 6% 97%` | Botões/fundos secundários. |
+| `muted` / `muted-foreground` | `bg-muted` / `text-muted-foreground` | `220 14% 96%` / `215 18% 42%` | `240 4% 12%` / `225 5% 57%` | Fundo sutil; texto secundário/legendas (contraste AA — ver invariantes). |
+| `accent` / `accent-foreground` | `bg-accent` / `text-accent-foreground` | `220 14% 96%` / `225 12% 7%` | `240 4% 12%` / `180 6% 97%` | Realce de hover/itens ativos. |
+| `destructive` / `destructive-foreground` | `bg-destructive` / `text-destructive` | `0 84% 60%` / `0 0% 98%` | `0 63% 31%` / `180 6% 97%` | Erros, exclusão, ações perigosas. |
+| `border` | `border-border` | `225 10% 93%` | `0 0% 100% / 0.05` | Bordas de cartões, tabelas e divisórias. |
+| `input` | `border-input` | `225 10% 93%` | `0 0% 100% / 0.05` | Borda de campos de formulário. |
+| `ring` | `ring-ring` | `0 0% 0%` | `234 58% 60%` | Anel de foco (teclado). |
+| `radius` | `rounded-*` | `0.5rem` (8px) | — | Raio base; `Button` é pill (`rounded-full`). |
+
+**Tipografia** (importada no topo do `index.css`): **Inter** (`font-sans`, corpo e títulos) e
+**JetBrains Mono** (`.font-mono`, com `tabular-nums` — usada em números/valores para alinhamento).
+
+**Verde (success):** não é token semântico — é cor crua Tailwind por convenção (`Button.success`
+usa `green-600`; como texto siga as regras de contraste abaixo).
+
 > **Contraste calibrado (WCAG AA) — invariantes que não devem ser revertidas sem reauditar:**
 > - `--muted-foreground` (claro) está em `215 18% 42%` — foi escurecido de `47%` porque o
 >   valor antigo reprovava por 0,01 (4.49:1). **Não clarear de volta.**
@@ -101,25 +130,38 @@ make up                      # sobe db + api + frontend (http://localhost)
 ```
 
 > Após mexer no `frontend/`, rebuild o container antes de auditar (`docker compose build frontend`):
-> o nginx serve o `dist` buildado, não o source — auditar sem rebuildar lê o bundle antigo.
+> o nginx serve o `dist` buildado, não o source — auditar sem rebuildar lê o bundle antigo. O
+> **dev server (Vite)** aplica HMR na hora; o **container Docker** só reflete a mudança após o
+> rebuild. Desde então, o `index.html` é servido com **`Cache-Control: no-cache`** (ver
+> [`nginx.conf`](../../frontend/nginx.conf)) — os assets têm hash e cache longo, mas o HTML de
+> entrada revalida sempre, então **um refresh normal já pega o build novo** (não precisa mais de
+> hard refresh). Se validar no browser, mire a porta que você realmente usa (`:80` do Docker, não
+> só o dev server) — foi assim que um bug de layout "não corrigido" acabou sendo só bundle em cache.
 
 ## Pendências e próximos passos (UI)
 
-Itens de polimento levantados na padronização visual/refino do kit, ainda em aberto. **Não
-bloqueiam** o uso atual:
+> **Todos os itens de polimento de a11y/UX foram resolvidos** (ver "Concluído" abaixo).
+> Resta apenas uma pendência opcional **de backend**, fora do escopo deste doc:
+> ordenação global no servidor (parâmetros `sort`/`order` nos endpoints paginados) —
+> hoje a ordenação do `DataTable` é client-side sobre a página carregada. Registrada em
+> [docs/todos.md](../todos.md) (Fase 10 → Ordenação de tabelas).
 
-- **Toasts no tema certo:** `sonner.tsx` importa `useTheme` de `next-themes`, mas o
-  provider é o `@/lib/theme` → toasts ficam em `system`. Trocar a importação.
-- **`autocomplete`/`inputMode` nos formulários:** a associação rótulo↔controle já existe
-  (via `Field`), mas falta declarar `autocomplete`/`inputMode` adequados nos campos
-  (email, tel, postal-code, numeric) para melhorar preenchimento e teclado mobile.
-- **Tom `warning` do `StatusBadge`:** `text-yellow-600` sobre `bg-yellow-500/10` é um risco
-  de contraste latente (não apareceu no axe por falta de dados de demo com aviso) — quando
-  houver badge de aviso real, subir para `yellow-700/800`.
-- **Navegação semântica:** o botão "voltar" do `PageShell` usa `<button onClick={navigate}>`;
-  trocar por `<Link>` para suportar Cmd/middle-click.
-- **`color-scheme`/`theme-color`:** declarar `color-scheme` no `.dark` e
-  `<meta name="theme-color">` no `index.html` (corrige scrollbars/controles nativos).
+**Concluído — polimento de a11y/UX (2ª leva):**
+
+- **Toasts no tema certo:** `sonner.tsx` agora importa `useTheme` de `@/lib/theme` (não mais
+  `next-themes`) → o toast segue o tema real (light/dark) em vez de ficar em `system`.
+- **`autocomplete`/`inputMode` nos formulários:** campos de e-mail, telefone, CEP e numéricos
+  declaram `type`/`inputMode`/`autocomplete` adequados. Em **Clientes** (dados do próprio
+  titular) usa-se os tokens `autocomplete` completos (`email`, `tel`, `postal-code`,
+  `address-*`); em **Fornecedores** (dados de terceiros) só `type`/`inputMode` + `autocomplete="off"`,
+  para não vazar autofill pessoal do operador num cadastro alheio.
+- **Tom `warning` do `StatusBadge`:** subido para `text-yellow-800` sobre `bg-yellow-500/10`
+  (mesma regra do `success`), eliminando o risco de contraste latente.
+- **Navegação semântica:** o botão "voltar" do `PageShell` virou `<Link to={back}>` — suporta
+  Cmd/middle-click e abertura em nova aba.
+- **`color-scheme`/`theme-color`:** `color-scheme` declarado em `:root`/`.dark` (`index.css`)
+  e `<meta name="color-scheme">` + `<meta name="theme-color">` (light/dark) no `index.html` —
+  corrige scrollbars e controles nativos por tema.
 
 **Concluído** (auditoria de acessibilidade, axe-core limpo): associação rótulo↔controle no
 `Field`; `Modal` sobre Radix Dialog (focus trap/Escape/aria); skip link + `<main>` focável e
