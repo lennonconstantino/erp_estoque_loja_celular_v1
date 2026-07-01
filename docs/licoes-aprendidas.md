@@ -215,7 +215,45 @@ independente de quem empurrou (usuário ou bot).
 
 ---
 
-## 8. Checklist do próximo deploy (destilado)
+## 8. Lições da ativação da observabilidade (Grafana Cloud + Alloy — 2026-07-01)
+
+Ligamos o **push gerenciado** de métricas (backend `/metrics` protegido → Grafana
+Alloy no Railway → `remote_write` pro Grafana Cloud → 4 alertas no ruler). Os
+tropeços foram quase todos de **credencial/roteamento** e de confundir camadas.
+
+- **Repo tem a receita; segredo mora no Railway (é manual, aceite).** Variável de
+  ambiente **não** vem de `.env` do repo e **merge não carrega valores** — eles são
+  digitados nas _Variables_ do serviço no dashboard, uma vez. Os `*.env.production.example`
+  são só a checklist versionada.
+- **Dois tokens distintos** (confundir custou horas): `METRICS_TOKEN` (backend) =
+  `ERP_METRICS_TOKEN` (Alloy) autentica o **scrape**; `GRAFANA_CLOUD_TOKEN`
+  autentica o **remote_write**. São mundos diferentes.
+- **Duas pernas independentes:** Alloy→backend (scrape, define o _valor_ de `up`) e
+  Alloy→Grafana Cloud (entrega). Consertar o remote_write **revelou** que o scrape
+  estava falhando (`up=0`) — estava mascarado enquanto nada chegava.
+- **Endereço privado no Railway:** `${{svc.RAILWAY_PRIVATE_DOMAIN}}:${{svc.APP_PORT}}`.
+  Use `APP_PORT` (existe); `PORT` não existe → `${{...PORT}}` resolve **vazio** →
+  `host:` (porta em branco) → `up=0`.
+- **`absent()` é gráfico invertido:** linha em **1** = série ausente (firing); a linha
+  **sumir** = saudável. Confirme sempre no positivo (`up{job="erp-api"}` = 1).
+- **`/metrics` é fail-safe:** em produção sem `METRICS_TOKEN`, responde **404**
+  (fechado por padrão) — seguro, mas lembre de setar o token para habilitar o scrape.
+
+### 8.1 Tabela de gotchas (resumo acionável)
+
+| # | Sintoma | Causa | Correção |
+|---|---------|-------|----------|
+| 11 | mimirtool `404 requested resource not found` | `--address` era o endpoint de push (`/api/prom/push`) | usar o **host base** do stack |
+| 12 | mimirtool `401 invalid scope requested` | token sem `rules:read`/`rules:write` | adicionar escopos `rules:*` na Access Policy → token novo |
+| 13 | Alloy `401 invalid token` no remote_write | `GRAFANA_CLOUD_TOKEN` velho/revogado ou sem `metrics:write` (ou `USER` ≠ instance ID) | token novo com `metrics:write` nas Variables → redeploy |
+| 14 | `up=0` / `ERPBackendDown` firing | `ERP_METRICS_ADDR` com `${{...PORT}}` (porta vazia) ou `ERP_METRICS_TOKEN` ≠ `METRICS_TOKEN` | usar `APP_PORT`; igualar os tokens de scrape |
+
+Guia operacional passo a passo (com troubleshooting completo):
+[setup/observability-activation.md](setup/observability-activation.md).
+
+---
+
+## 9. Checklist do próximo deploy (destilado)
 
 - [ ] `DATABASE_URL` = **Session Pooler** (IPv4, 5432), nunca a direta nem o Transaction Pooler (6543).
 - [ ] `JWT_SECRET` longo e único (`openssl rand -base64 64`), nunca o default de dev.
@@ -225,3 +263,7 @@ independente de quem empurrou (usuário ou bot).
 - [ ] Gerar domínio do frontend → `ALLOWED_ORIGINS` no backend → redeploy.
 - [ ] Verificar: `/health` (200) dos dois, login, preflight CORS, e um ciclo de negócio.
 - [ ] Garantir que os fixes de infra estão **commitados no `main`** (auto-deploy do GitHub).
+- [ ] **Observabilidade (opcional):** `METRICS_TOKEN` no backend; serviço Alloy com
+  as 5 vars (`ERP_METRICS_ADDR` via `APP_PORT`, `ERP_METRICS_TOKEN` = do backend,
+  `GRAFANA_CLOUD_*`); `mimirtool rules load` (host base + token `rules:*`);
+  verificar `up{job="erp-api"}=1`.

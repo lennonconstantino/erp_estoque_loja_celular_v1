@@ -3,6 +3,29 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.5.0] — 2026-07-01
+
+Observabilidade **ativada em produção** via push gerenciado (sem Prometheus/Grafana
+stateful no Railway).
+
+### Adicionado
+
+- **Proteção do `/metrics`**: `httpserver.ProtectMetrics` + `METRICS_TOKEN`. Em
+  produção sem token o endpoint fica **fechado (404)** por padrão (fail-safe); com
+  token, exige `Authorization: Bearer` (comparação em tempo constante). Testes cobrem
+  os três modos (dev aberto / prod fechado / bearer).
+- **Serviço Grafana Alloy** pronto pra Railway em [`observability/alloy/`](../../observability/alloy)
+  (Dockerfile + `railway.json` + `config.alloy`): raspa o `/metrics` pela rede
+  privada e faz `remote_write` pro Grafana Cloud.
+- **4 alertas** em [`observability/alerts/erp-alerts.yml`](../../observability/alerts/erp-alerts.yml)
+  (validados por promtool): `ERPBackendDown`, `ERPBackendUnreachable`,
+  `ERPHighErrorRate`, `ERPHighLatencyP99`. Carregados localmente via `rule_files`.
+- **Runbook de ativação + troubleshooting**: [docs/setup/observability-activation.md](../setup/observability-activation.md)
+  (dois tokens, duas pernas, 404/401/`up=0`), lições em
+  [docs/licoes-aprendidas.md §8](../licoes-aprendidas.md), e o modelo em
+  [docs/architecture/observability.md](../architecture/observability.md).
+- Templates de variáveis: `observability/alloy/.env.production.example`.
+
 ## [1.4.1] — 2026-07-01
 
 ### Corrigido

@@ -87,7 +87,7 @@ Cada domínio é um pacote em `backend/internal/modules/<dominio>/` com camadas 
 - 🛡️ **Resiliência nos adaptadores outbound** — `Retry → Circuit Breaker → Bulkhead` compostos em `resilience.Policy`, aplicados nas chamadas a APIs externas (ex.: ViaCEP).
 - 📮 **Gateway de CEP (ViaCEP)** — consulta de endereço no cadastro de clientes/fornecedores.
 - 🖥️ **SPA React/Vite** — todas as telas do ERP sobre um kit de UI compartilhado, com **Dark/Light mode** (tokens semânticos), camada de rede própria com refresh de token automático; servida por nginx em produção.
-- 📊 **Observabilidade** — métricas expostas para Prometheus + dashboards Grafana (stack opcional via `docker-compose.observability.yml`).
+- 📊 **Observabilidade** — métricas OpenTelemetry em `/metrics` (protegido por token em produção). Local: Prometheus + Grafana (`docker-compose.observability.yml`); produção: push gerenciado via Grafana Alloy → Grafana Cloud + 4 alertas (ver [ativação](docs/setup/observability-activation.md)).
 
 ## 🧩 Módulos / Bounded Contexts
 

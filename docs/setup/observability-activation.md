@@ -15,6 +15,26 @@ subir o **Grafana Alloy** no Railway (scrape → `remote_write`) e carregar os
 
 ---
 
+## Modelo mental (leia antes)
+
+Dois esclarecimentos que evitam a maior parte dos tropeços:
+
+- **Repo ≠ variáveis.** O repo tem a **receita** (Dockerfile, `config.alloy`,
+  `railway.json`, alertas). Os **valores** das variáveis vivem nas **Variables do
+  serviço no Railway** (dashboard), setados **à mão uma vez** — merge de código
+  **não** carrega nem sobrescreve variáveis. Um `.env` no repo **não é lido** pelo
+  Railway; os `*.env.production.example` são só a checklist versionada.
+- **Dois tokens, duas pernas.** Não confunda:
+  - `METRICS_TOKEN` (backend) **=** `ERP_METRICS_TOKEN` (Alloy) → autentica o
+    **scrape** do `/metrics`. É um segredo **nosso**.
+  - `GRAFANA_CLOUD_TOKEN` (Alloy) → autentica o **remote_write** pro Grafana Cloud.
+    É da **Grafana Cloud** (Access Policy).
+  - As pernas são independentes: **Alloy→backend** (scrape, define o _valor_ de
+    `up`) e **Alloy→Grafana Cloud** (remote_write, _entrega_ os dados). Consertar
+    uma costuma **revelar** o problema da outra.
+
+---
+
 ## 1. Proteger o `/metrics` com `METRICS_TOKEN`
 
 1. Gere um token forte (rode **você**, não compartilhe):
@@ -61,21 +81,21 @@ subir o **Grafana Alloy** no Railway (scrape → `remote_write`) e carregar os
 
    | Variável | Valor |
    |----------|-------|
-   | `ERP_METRICS_ADDR` | `erp-estoque-backend.railway.internal:<PORTA>` (veja abaixo) |
+   | `ERP_METRICS_ADDR` | `${{erp-estoque-backend.RAILWAY_PRIVATE_DOMAIN}}:${{erp-estoque-backend.APP_PORT}}` |
    | `ERP_METRICS_TOKEN` | o **mesmo** `METRICS_TOKEN` do passo 1 |
    | `GRAFANA_CLOUD_URL` | endpoint remote_write |
    | `GRAFANA_CLOUD_USER` | instance ID |
    | `GRAFANA_CLOUD_TOKEN` | token da access policy (com `metrics:write`) |
 
+   > Checklist versionada dessas variáveis: [`observability/alloy/.env.production.example`](../../observability/alloy/.env.production.example).
+
 3. **Deploy**. Nos logs do Alloy, confirme scrape do alvo e `remote_write` **sem 401/403**.
 
-> **A porta do `ERP_METRICS_ADDR`:** use a que o backend REALMENTE escuta — veja no
-> deploy log do backend a linha `API ouvindo em :XXXX`. O código lê
-> `PORT → APP_PORT → 8080`; então, com `APP_PORT=8080` e **sem** `PORT`, é `8080`.
-> **Não** use `${{erp-estoque-backend.PORT}}` se o backend não tiver a var `PORT` —
-> a referência resolve vazia e o Alloy conecta em `host:` (porta em branco) →
-> scrape falha → `up=0` → dispara `ERPBackendDown`. O `RAILWAY_PRIVATE_DOMAIN`,
-> esse sim, existe. Rede privada (`*.railway.internal`) é interna → `scheme = http`.
+> **A porta do `ERP_METRICS_ADDR`:** use `${{...APP_PORT}}`, **não** `${{...PORT}}`.
+> O backend lê `PORT → APP_PORT → 8080`; como não há `PORT`, referenciar `PORT`
+> resolve **vazio** → `host:` (porta em branco) → scrape falha → `up=0` → dispara
+> `ERPBackendDown`. Confira a porta real no deploy log do backend: `API ouvindo em :XXXX`.
+> Rede privada (`*.railway.internal`) é interna → `scheme = http`.
 
 ## 4. Carregar os alertas no Grafana Cloud
 
@@ -115,6 +135,40 @@ uma **notification policy** para as severidades `critical`/`warning`.
 - **Grafana Cloud → Explore** → `up{job="erp-api"}` retorna **1**.
 - `http_server_request_duration_seconds_count` tem dados (gere tráfego no ERP).
 - **Alerting → Rules**: as 4 regras `ERP*` aparecem em estado **Normal**.
+
+## Troubleshooting
+
+Estes são os erros que enfrentamos na primeira ativação — sintoma → causa → correção.
+Vale reler o **Modelo mental** acima (dois tokens, duas pernas) antes de debugar.
+
+| Sintoma | Onde | Causa | Correção |
+|---|---|---|---|
+| `404 requested resource not found` | mimirtool | `--address` era o endpoint de **push** (`.../api/prom/push`); o mimirtool anexa `/prometheus/config/v1/rules` | use o **host base** do stack (sem `/api/prom/push`) |
+| `401 authentication error: invalid scope requested` | mimirtool | token **sem** `rules:read`/`rules:write` (só tinha `metrics:*`) | adicione os escopos `rules:*` na Access Policy → gere token novo |
+| `401 authentication error: invalid token` no `remote_write` | logs do Alloy | `GRAFANA_CLOUD_TOKEN` errado/revogado ou sem `metrics:write`; **ou** `GRAFANA_CLOUD_USER` ≠ instance ID | atualize o token (com `metrics:write`) nas Variables do Alloy → redeploy |
+| `up=0` / `ERPBackendDown` firing | Grafana Cloud | scrape falhando: (a) `ERP_METRICS_ADDR` com **porta vazia** (`${{...PORT}}` em vez de `APP_PORT`); (b) `ERP_METRICS_TOKEN` ≠ `METRICS_TOKEN`; (c) nome do serviço backend errado no endereço | corrija endereço/token; confira a porta no deploy log (`API ouvindo em :XXXX`) |
+| `ERPBackendUnreachable` firing (`absent`) | Grafana Cloud | **nada** chega: Alloy não deployado, ou remote_write quebrado | suba/conserte o Alloy (ver `invalid token` acima) |
+| `/metrics` → **404** em produção | curl no backend | `METRICS_TOKEN` não setado (fail-safe fecha o endpoint) | setar `METRICS_TOKEN` no backend → redeploy |
+| `/metrics` → **401** com header correto | curl no backend | valor do header ≠ `METRICS_TOKEN` do backend | use o valor exato; alinhe `ERP_METRICS_TOKEN` do Alloy |
+
+**Lendo o alerta `ERPBackendUnreachable` (é `absent()` — gráfico invertido):** linha
+em **1** = série **ausente** (ruim, firing); a linha **sumir** = série presente
+(bom). Não é "morreu" — sumir é saúde. Confirme sempre **no positivo**:
+`up{job="erp-api"}` = 1 no Explore.
+
+## Manual vs. reproduzível (aceite isto)
+
+Nem tudo sobe sozinho do repo — e tudo bem, desde que esteja claro o que é o quê:
+
+- **Reproduzível pelo repo** (merge → redeploy): `Dockerfile`, `config.alloy`,
+  `railway.json`, `erp-alerts.yml`, migrations. A **lista** de variáveis está nos
+  `*.env.production.example`.
+- **Manual, sempre** (não vem do repo): os **valores** dos segredos, digitados nas
+  **Variables do serviço no Railway**; e o setup no **Grafana Cloud** (stack, Access
+  Policy, token, contact point). Isso é inerente — segredo não mora no git.
+- **Antes de recriar serviços do zero**, faça **backup das Variables** (`railway
+  variables` na CLI, ou o Raw Editor no dashboard) num cofre de segredos. Sem isso,
+  você regenera cada segredo e re-liga o Grafana Cloud na mão.
 
 ## Desligar / rollback
 
