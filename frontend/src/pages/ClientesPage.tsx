@@ -149,9 +149,12 @@ export default function ClientesPage() {
         uf: form.uf,
       }
       if (editando) {
-        await api.put(`/api/v1/clientes/${editando.id}`, payload)
+        // Na edição o checkbox "Cliente ativo" é enviado e honrado pelo backend.
+        await api.put(`/api/v1/clientes/${editando.id}`, { ...payload, ativo: form.ativo })
       } else {
-        await api.post('/api/v1/clientes', { ...payload, ativo: form.ativo })
+        // Na criação o backend cria todo cliente como ativo (domain.NovoCliente);
+        // não enviamos `ativo` (o form de criação nem exibe o controle).
+        await api.post('/api/v1/clientes', payload)
       }
       fecharModal()
       void carregar()

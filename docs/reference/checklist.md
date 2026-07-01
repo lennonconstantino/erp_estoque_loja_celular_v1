@@ -147,6 +147,11 @@ Salvar tudo que vem no body permite ao atacante injetar campos (`role:'admin'`,
   `MaxBytesReader` de 1 MiB ([httpserver.go](../../backend/internal/platform/httpserver/httpserver.go)).
 - ✅ Handlers usam **DTOs próprios** (`clienteRequest`/`clienteResponse`), nunca a
   entidade de domínio direto; invariantes validadas em `domain/`.
+- ✅ Campo sensível não vira mass assignment mesmo quando declarado no DTO: `ativo`
+  existe em `clienteRequest`, mas o handler de **criação** não o repassa ao
+  `CriarClienteInput` e `domain.NovoCliente` força `Ativo=true`. Ou seja, um
+  `ativo:false` injetado no POST é **ignorado** (não cria cliente inativo); o status
+  só é editável no PUT, via `DefinirAtivo`.
 
 ### 2. SQL injection ✅
 

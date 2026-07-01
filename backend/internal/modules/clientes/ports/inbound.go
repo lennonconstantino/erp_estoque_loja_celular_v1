@@ -24,7 +24,7 @@ type CriarClienteInput struct {
 	UF     string
 }
 
-// AtualizarClienteInput é o comando de atualização (contato + endereço).
+// AtualizarClienteInput é o comando de atualização (contato + endereço + status).
 type AtualizarClienteInput struct {
 	Nome        string
 	Email       string
@@ -36,6 +36,7 @@ type AtualizarClienteInput struct {
 	Bairro      string
 	Cidade      string
 	UF          string
+	Ativo       bool
 }
 
 // ClienteService é a porta de entrada (caso de uso) oferecida pelo módulo.

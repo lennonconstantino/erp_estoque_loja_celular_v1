@@ -3,6 +3,26 @@
 Histórico de mudanças do ERP de estoque para loja de acessórios de celular.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.1] — 2026-07-01
+
+### Corrigido
+
+- **Cadastro de cliente retornava `400 unknown field "ativo"`**: o frontend enviava
+  o campo `ativo` no POST `/api/v1/clientes`, mas o DTO de criação não o declara e
+  `DecodeJSON` (`DisallowUnknownFields`) rejeita campos extras. O POST deixou de
+  enviar `ativo` — todo cliente já nasce ativo em `domain.NovoCliente`.
+
+### Alterado
+
+- **Toggle "Cliente ativo" na edição passou a funcionar de fato.** Antes o checkbox
+  era exibido mas o PUT não enviava `ativo` e o backend não tinha caminho para
+  alterá-lo. Agora o status é threaded por todas as camadas hexagonais: novo
+  `Cliente.DefinirAtivo` (domínio, no-op quando não muda) → `AtualizarClienteInput.Ativo`
+  (porta) → `Service.Atualizar` → DTO `clienteRequest.Ativo` (HTTP) → coluna `atv_cli`
+  (já persistida pelo repositório). Testes de domínio (`TestDefinirAtivo`) e de
+  aplicação (ativo↔inativo + criação nasce ativa) acompanham; juiz independente
+  **CONFORME** (L1–L8).
+
 ## [1.4.0] — 2026-07-01
 
 Integração Railway ↔ GitHub ativa: branch `production` tracado, auto-deploy com

@@ -9,13 +9,22 @@ import {
   ShoppingCart,
   Tag,
   Truck,
+  UserCog,
   Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
-import { clearTokens } from '@/lib/auth'
+import { clearTokens, hasPerm } from '@/lib/auth'
 
-const menuItems = [
+interface MenuItem {
+  label: string
+  icon: typeof LayoutDashboard
+  path: string
+  /** Permissão exigida para exibir o item (gating só de UI). */
+  perm?: string
+}
+
+const menuItems: MenuItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { label: 'Clientes', icon: Users, path: '/clientes' },
   { label: 'Fornecedores', icon: Truck, path: '/fornecedores' },
@@ -25,10 +34,14 @@ const menuItems = [
   { label: 'Vendas', icon: ClipboardList, path: '/vendas' },
   { label: 'Ajuste Estoque', icon: ArrowUpDown, path: '/estoque/ajustes' },
   { label: 'Relatórios', icon: BarChart2, path: '/relatorios' },
+  { label: 'Usuários', icon: UserCog, path: '/usuarios', perm: 'iam:admin' },
 ]
 
 export function Sidebar() {
   const navigate = useNavigate()
+  const itensVisiveis = menuItems.filter((item) => !item.perm || hasPerm(item.perm))
+  const principal = itensVisiveis.slice(0, 1)
+  const gestao = itensVisiveis.slice(1)
 
   async function handleLogout() {
     try {
@@ -56,7 +69,7 @@ export function Sidebar() {
 
       <nav aria-label="Navegação principal" className="flex-1 px-4 space-y-1 overflow-y-auto py-2">
         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2">Principal</div>
-        {menuItems.slice(0, 1).map((item) => (
+        {principal.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -75,7 +88,7 @@ export function Sidebar() {
         ))}
 
         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 mt-6 mb-2">Gestão</div>
-        {menuItems.slice(1).map((item) => (
+        {gestao.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

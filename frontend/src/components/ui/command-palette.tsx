@@ -11,6 +11,7 @@ import {
   BarChart2,
   LayoutDashboard,
   Plus,
+  UserCog,
 } from 'lucide-react'
 
 import {
@@ -22,6 +23,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
+import { hasPerm } from '@/lib/auth'
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false)
@@ -111,6 +113,17 @@ export function CommandPalette() {
               <span>Relatórios e BI</span>
             </CommandItem>
           </CommandGroup>
+          {hasPerm('iam:admin') && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="Administração">
+                <CommandItem onSelect={() => runCommand(() => navigate('/usuarios'))} className="cursor-pointer">
+                  <UserCog className="mr-2 h-4 w-4" />
+                  <span>Usuários</span>
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>

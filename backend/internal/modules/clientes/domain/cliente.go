@@ -79,6 +79,16 @@ func (c *Cliente) AplicarEndereco(e Endereco) {
 	c.toca()
 }
 
+// DefinirAtivo (in)ativa o cliente. Registra a alteração apenas quando o status
+// muda de fato, evitando tocar AtualizadoEm sem necessidade.
+func (c *Cliente) DefinirAtivo(ativo bool) {
+	if c.Ativo == ativo {
+		return
+	}
+	c.Ativo = ativo
+	c.toca()
+}
+
 // AtualizarContato altera nome/email/telefone, revalidando as invariantes.
 func (c *Cliente) AtualizarContato(nome, email, telefone string) error {
 	c.Nome = strings.TrimSpace(nome)

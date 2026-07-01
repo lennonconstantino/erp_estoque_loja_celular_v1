@@ -28,6 +28,11 @@ permissão (`recurso:acao`).
 - **Invariantes:** CPF com 11 dígitos válidos e único; Nome e E-mail obrigatórios.
 - **Fluxo de cadastro:** informar CPF → consultar existência → atualizar ou criar.
 - **CEP:** ao informar CEP, `CepGateway` preenche rua/bairro/cidade/UF.
+- **Status ativo/inativo (`atv_cli`):** todo cliente **nasce ativo** (`NovoCliente`
+  força `Ativo=true`); a criação **ignora** qualquer `ativo` recebido no body. O
+  status só muda na atualização, via `Cliente.DefinirAtivo` (no-op quando o valor
+  não muda), exposto por `AtualizarClienteInput.Ativo`. Não há soft-delete — a
+  remoção é física (`DELETE`).
 - Mantém `dt_ult_comp_cli` (atualizada por evento `VendaConfirmada`).
 
 ## fornecedores

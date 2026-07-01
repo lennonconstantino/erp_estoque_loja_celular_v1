@@ -76,6 +76,7 @@ func (s *Service) Atualizar(ctx context.Context, id uuid.UUID, in ports.Atualiza
 	if in.Rua != "" || in.Bairro != "" || in.Cidade != "" || in.UF != "" {
 		c.Rua, c.Bairro, c.Cidade, c.UF = in.Rua, in.Bairro, in.Cidade, strings.ToUpper(in.UF)
 	}
+	c.DefinirAtivo(in.Ativo)
 	s.completarEndereco(ctx, c)
 
 	if err := c.Validar(); err != nil {

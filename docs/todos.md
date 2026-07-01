@@ -5,7 +5,9 @@ Estado atual: migrations 000001–000010 prontas (inclui `seed_demo`), plataform
 de negócio implementados** (iam, clientes, fornecedores, catálogo, estoque,
 compras, vendas, relatórios). Frontend completo: todas as telas existem e
 compartilham o **kit de UI** em `@/components/ui` (Fases 1–8 e 10 concluídas;
-resta a Fase 9 — deploy).
+resta a Fase 9 — deploy). **Exceção descoberta em 2026-07-01:** faltava a tela de
+**gestão de usuários** — o backend IAM já expunha `GET/POST/PATCH /usuarios`, mas
+nunca foi especificada/implementada a UI. Ver §Fase 1 › _Gestão de usuários_.
 
 > **Ordem lógica:** backend antes do frontend — o frontend consome a API.
 > A partir da fase 3 (cadastros) é possível trabalhar em paralelo.
@@ -50,6 +52,45 @@ resta a Fase 9 — deploy).
 - [x] Implementar fluxo de login em `LoginPage.tsx` (chamar `POST /api/v1/auth/login`, salvar tokens via `lib/auth.ts`)
 - [x] Implementar proteção de rotas em `App.tsx` — redireciona para login se não autenticado
 - [x] Implementar renovação automática de token (já esperada em `lib/api.ts`) e logout no menu
+
+### Frontend — Gestão de usuários (tela admin) · lacuna identificada em 2026-07-01
+
+> **Contexto do furo:** o backend expõe `GET/POST/PATCH /usuarios` (RBAC
+> `iam:admin`) desde a Fase 1, mas nunca houve tela para consumi-los — só o
+> `admin@loja.local` do seed existia e não havia como criar/editar usuários pela
+> interface. Escopo confirmado com o cliente: **gestão administrativa** de usuários
+> (sem autocadastro público — criar usuário continua exigindo `iam:admin`).
+>
+> **Restrições atuais do backend que moldam a tela:** (a) o único papel semeado é
+> `ADMIN` (recebe todas as permissões) e não há `GET /papeis`; (b) o
+> `PATCH /usuarios/{id}` **não** aceita `papeis` — papel só é atribuído na criação.
+> Por isso o papel é modelado como um checkbox "Administrador (ADMIN)" na criação.
+> Quando surgirem mais papéis, evoluir para seleção múltipla + endpoint de papéis.
+
+- [x] `lib/auth.ts`: decodificar o claim `perms` do JWT e persistir em `localStorage`
+  (dentro de `setTokens`, sobrevive a reload e refresh); expor `getPerms()`/`hasPerm()`.
+  Uso **apenas de UI** — a autorização real continua no backend a cada request.
+- [x] `pages/UsuariosPage.tsx`: listagem paginada (nome, e-mail, status, últ. acesso,
+  criado em) + guarda de `iam:admin` (estado "acesso restrito" para não-admin).
+- [x] Modal "Novo usuário": nome, e-mail, senha (mín. 8), checkbox Administrador →
+  `POST /api/v1/usuarios` (`papeis: ['ADMIN']` quando marcado).
+- [x] Modal "Editar usuário": nome, e-mail, ativo/inativo, troca de senha opcional →
+  `PATCH /api/v1/usuarios/{id}`.
+- [x] `App.tsx`: rota protegida `/usuarios`.
+- [x] `Sidebar` + `CommandPalette`: item "Usuários" visível só com `hasPerm('iam:admin')`.
+- [x] Tratar erros do backend no formulário (409 e-mail duplicado, 422 senha fraca /
+  e-mail inválido) via `ApiError.message` + `toast`.
+- [x] **D1** — `pnpm tsc --noEmit` + `pnpm lint` limpos (build de produção OK).
+- [x] **D2** — marcar estes itens `[x]`.
+- [x] **D3** — juiz independente **CONFORME** contra esta spec e as Leis L1–L8
+  (aderência, RBAC, kit de UI, segurança do decode client-side; `tsc`/`lint` OK).
+- [x] **Hardening (revisão adversarial multi-lente):** 3 achados edge-case corrigidos —
+  (1) impedir o admin de **desativar a própria conta** (guard via claim `sub`, já que
+  `ADMIN` é o único papel e não haveria recuperação in-app); (2) gating da tela decidido
+  pelo **403 do backend** (não pelas `perms` possivelmente ausentes no localStorage após
+  reload de sessão antiga); (3) **mensagem amigável** na colisão de e-mail ao editar (o
+  backend só checa duplicidade na criação; na edição devolve 500 genérico). As lentes de
+  correção/contrato, segurança/auth e a11y/kit voltaram **limpas**.
 
 ---
 

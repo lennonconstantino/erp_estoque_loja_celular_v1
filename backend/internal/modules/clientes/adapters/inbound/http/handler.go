@@ -40,6 +40,10 @@ type clienteRequest struct {
 	Bairro      string `json:"bairro"`
 	Cidade      string `json:"cidade"`
 	UF          string `json:"uf"`
+	// Ativo só é consumido na atualização (PUT); na criação é ignorado, pois todo
+	// cliente nasce ativo (domain.NovoCliente). Declarado no DTO compartilhado para
+	// não ser rejeitado como campo desconhecido pelo DecodeJSON.
+	Ativo bool `json:"ativo"`
 }
 
 type clienteResponse struct {
@@ -105,6 +109,7 @@ func (h *Handler) Atualizar(w http.ResponseWriter, r *http.Request) {
 		Nome: req.Nome, Email: req.Email, Telefone: req.Telefone,
 		CEP: req.CEP, Numero: req.Numero, Complemento: req.Complemento,
 		Rua: req.Rua, Bairro: req.Bairro, Cidade: req.Cidade, UF: req.UF,
+		Ativo: req.Ativo,
 	})
 	if err != nil {
 		writeDomainError(w, err)

@@ -2,7 +2,7 @@
 
 > Sistema de gestão de estoque para loja de acessórios de celular — backend Go (monólito modular, arquitetura hexagonal), PostgreSQL e SPA React/Vite.
 
-![Status](https://img.shields.io/badge/status-WIP%20v1-orange) ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white) ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-em%20produção%20(v1)-success) ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white) ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 📖 Sobre o Projeto
 
@@ -14,7 +14,7 @@ Código, comentários e documentação são escritos em **português** — esse 
 
 > 📐 **Visão arquitetural completa** (topologia, fluxo de requisição, modelo de dados, domínios e roadmap de microsserviços): **[docs/README.md](docs/README.md)** e **[docs/architecture.md](docs/architecture.md)**.
 
-> ⚠️ **Estado atual:** apenas o módulo `clientes` está implementado em Go (referência canônica). Os demais domínios (`iam`, `fornecedores`, `catalogo`, `compras`, `vendas`, `estoque`) existem como **migrations + documentação** e ainda precisam ser codificados seguindo o mesmo molde hexagonal.
+> ✅ **Estado atual:** **todos os bounded contexts estão implementados em Go** (`iam`, `clientes`, `fornecedores`, `catalogo`, `estoque`, `compras`, `vendas`, `relatorios`) seguindo o mesmo molde hexagonal — `clientes` é a referência canônica. O **frontend cobre todas as telas** e compartilha o kit de UI (com Dark/Light mode). A aplicação está **no ar em produção desde 2026-07-01** (Railway + Postgres no Supabase), com o ciclo de negócio validado no ambiente real.
 
 ## 🏗️ Arquitetura
 
@@ -86,23 +86,25 @@ Cada domínio é um pacote em `backend/internal/modules/<dominio>/` com camadas 
 - 📒 **Ledger de estoque append-only** — saldo materializado mantido em sincronia via porta `CatalogoWriter`, com garantia de saldo nunca negativo.
 - 🛡️ **Resiliência nos adaptadores outbound** — `Retry → Circuit Breaker → Bulkhead` compostos em `resilience.Policy`, aplicados nas chamadas a APIs externas (ex.: ViaCEP).
 - 📮 **Gateway de CEP (ViaCEP)** — consulta de endereço no cadastro de clientes/fornecedores.
-- 🖥️ **SPA React/Vite** — camada de rede própria com refresh de token automático; servida por nginx em produção.
+- 🖥️ **SPA React/Vite** — todas as telas do ERP sobre um kit de UI compartilhado, com **Dark/Light mode** (tokens semânticos), camada de rede própria com refresh de token automático; servida por nginx em produção.
+- 📊 **Observabilidade** — métricas expostas para Prometheus + dashboards Grafana (stack opcional via `docker-compose.observability.yml`).
 
 ## 🧩 Módulos / Bounded Contexts
 
-Cada contexto possui seu próprio schema PostgreSQL. Estado de implementação atual:
+Cada contexto possui seu próprio schema PostgreSQL. **Todos estão implementados em Go** (`clientes` é a referência canônica do molde hexagonal):
 
 | Contexto | Schema | Responsabilidade | Status |
 |----------|--------|------------------|--------|
-| `iam` | `iam` | Identidade e acesso: usuários, JWT (access/refresh), papéis → permissões; expõe o middleware de authz aos demais módulos. | 📄 Migrations + docs |
-| `clientes` | `clientes` | Cadastro de clientes; validação de CPF (11 dígitos, único) + consulta de CEP; rastreia `dt_ult_comp_cli`. | ✅ **Implementado em Go** |
-| `fornecedores` | `fornecedores` | Cadastro de fornecedores; validação de CNPJ (14 dígitos, único) + consulta de CEP; rastreia `dt_ult_comp_for`. | 📄 Migrations + docs |
-| `catalogo` | `catalogo` | Categorias e produtos; margem (`custo < venda`), disponibilidade (`disp_pro`); dono do saldo materializado. | 📄 Migrations + docs |
-| `compras` | `compras` | Pedidos de compra (cabeçalho + itens); entrada de estoque; caso de uso confirmar-compra. | 📄 Migrations + docs |
-| `vendas` | `vendas` | Pedidos de venda (cabeçalho + itens); saída de estoque; documento fiscal (Cupom/NF). | 📄 Migrations + docs |
-| `estoque` | `estoque` | Ledger de movimentações + ajustes + saldo; **fonte da verdade** do estoque. | 📄 Migrations + docs |
+| `iam` | `iam` | Identidade e acesso: usuários, JWT (access/refresh), papéis → permissões; expõe o middleware de authz aos demais módulos. | ✅ Implementado em Go |
+| `clientes` | `clientes` | Cadastro de clientes; validação de CPF (11 dígitos, único) + consulta de CEP; status ativo/inativo; rastreia `dt_ult_comp_cli`. | ✅ **Implementado em Go** (referência) |
+| `fornecedores` | `fornecedores` | Cadastro de fornecedores; validação de CNPJ (14 dígitos, único) + consulta de CEP; rastreia `dt_ult_comp_for`. | ✅ Implementado em Go |
+| `catalogo` | `catalogo` | Categorias e produtos; margem (`custo < venda`), disponibilidade (`disp_pro`); dono do saldo materializado. | ✅ Implementado em Go |
+| `compras` | `compras` | Pedidos de compra (cabeçalho + itens); entrada de estoque; caso de uso confirmar-compra. | ✅ Implementado em Go |
+| `vendas` | `vendas` | Pedidos de venda (cabeçalho + itens); saída de estoque; documento fiscal (Cupom/NF). | ✅ Implementado em Go |
+| `estoque` | `estoque` | Ledger de movimentações + ajustes + saldo; **fonte da verdade** do estoque. | ✅ Implementado em Go |
+| `relatorios` | (leitura) | Relatórios de leitura: produtos abaixo do mínimo, mais vendidos, vendas/compras por período. | ✅ Implementado em Go |
 
-**Dependências entre módulos (via portas):** `clientes`/`fornecedores` → `CepGateway`; `catalogo` → `EstoqueReader`; `compras` → `EstoqueWriter`, `CatalogoReader`; `vendas` → `EstoqueWriter`, `CatalogoReader`, `FiscalGateway`; `estoque` → `CatalogoWriter`.
+**Dependências entre módulos (via portas):** `clientes`/`fornecedores` → `CepGateway`; `catalogo` → `EstoqueReader`; `compras` → `EstoqueWriter`, `CatalogoReader`; `vendas` → `EstoqueWriter`, `CatalogoReader`, `ClienteWriter`, `FiscalGateway`; `estoque` → `CatalogoWriter`; `relatorios` → leitura consolidada (produtos/estoque/vendas/compras).
 
 ### Papéis (RBAC)
 
@@ -125,7 +127,7 @@ Permissões seguem o formato `recurso:acao` (ex.: `vendas:write`, `clientes:read
 - **Env**: `github.com/joho/godotenv` v1.5.1
 - **Hash de senha**: `golang.org/x/crypto` v0.27.0 (bcrypt)
 - **Testes**: `github.com/stretchr/testify` v1.9.0
-- **Plataforma compartilhada** (`backend/internal/platform/`): `auth` (JWT + RBAC), `httpserver` (chi + middlewares globais + `/health` + envelope de erro `{"error":{"code","message"}}`), `resilience` (Retry/CircuitBreaker/Bulkhead), `config`, `database`.
+- **Plataforma compartilhada** (`backend/internal/platform/`): `auth` (JWT + RBAC), `httpserver` (chi + middlewares globais + `/health` + envelope de erro `{"error":{"code","message"}}`), `resilience` (Retry/CircuitBreaker/Bulkhead), `observability` (métricas Prometheus), `config`, `database`.
 
 **Frontend**
 
@@ -315,13 +317,15 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 │   ├── cmd/migrate/        # runner de migrations embarcado (/app/migrate up no Railway)
 │   ├── internal/
 │   │   ├── platform/       # infra compartilhada
-│   │   │   ├── auth/       # JWT HS256 + RBAC
-│   │   │   ├── httpserver/ # router chi, middlewares, /health, helpers
-│   │   │   ├── resilience/ # Retry + Circuit Breaker + Bulkhead (Policy)
-│   │   │   ├── config/     # carga de config via env
-│   │   │   └── database/   # pool pgx (pgxpool)
-│   │   └── modules/        # 1 pacote por bounded context
-│   │       └── clientes/   # único módulo implementado (referência canônica)
+│   │   │   ├── auth/          # JWT HS256 + RBAC
+│   │   │   ├── httpserver/    # router chi, middlewares, /health, helpers
+│   │   │   ├── resilience/    # Retry + Circuit Breaker + Bulkhead (Policy)
+│   │   │   ├── observability/ # métricas Prometheus
+│   │   │   ├── config/        # carga de config via env
+│   │   │   └── database/      # pool pgx (pgxpool)
+│   │   └── modules/        # 1 pacote por bounded context (todos implementados)
+│   │       ├── iam/ · fornecedores/ · catalogo/ · estoque/ · compras/ · vendas/ · relatorios/
+│   │       └── clientes/   # referência canônica do molde hexagonal
 │   │           ├── domain/
 │   │           ├── ports/          # inbound.go · outbound.go
 │   │           ├── application/
@@ -332,8 +336,9 @@ A documentação completa está em **[`docs/`](docs/README.md)**.
 │   └── go.mod
 ├── frontend/               # SPA React/Vite (pnpm) — ver frontend/CLAUDE.md
 │   ├── src/
-│   │   ├── lib/            # http · api · auth · env · utils
-│   │   ├── pages/          # LoginPage · DashboardPage
+│   │   ├── components/ui/  # kit de UI compartilhado (PageShell, DataTable, Modal, …)
+│   │   ├── lib/            # http · api · auth · env · theme · utils
+│   │   ├── pages/          # todas as telas: Login · Dashboard · Clientes · Fornecedores · Categorias · Produtos · Compras · Vendas · NovaVenda · AjustesEstoque · Relatorios · Usuarios
 │   │   ├── App.tsx         # rotas + PrivateRoute
 │   │   └── main.tsx        # entrypoint
 │   ├── Dockerfile · nginx.conf · vite.config.ts · components.json · package.json
