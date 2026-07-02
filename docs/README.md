@@ -15,7 +15,9 @@ Backend em **Go** com arquitetura hexagonal, PostgreSQL e autenticação JWT + R
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [Playbook de Planejamento](playbook-planejamento.md) | Método reproduzível para planejar e executar um projeto em fases (destilado deste): sistema de documentos, Leis vs Regras, micro-ciclo D1–D3, macro-ciclo de maturidade e armadilhas conhecidas |
 | [Mandates](mandates.md) | Definition of Done por tarefa (D1–D3), protocolo do agente juiz, templates e política de cobertura |
+| [Template de Spec (PROMPT)](templates/PROMPT.template.md) | Esqueleto preenchível de especificação executável para um projeto novo |
 
 ## Arquitetura
 
